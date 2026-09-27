@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertCircle, RefreshCw, Send, Sparkles, X } from "lucide-react";
+import { AlertCircle, Mic, RefreshCw, Send, Sparkles, Volume2, X } from "lucide-react";
 import { EmptyState, Segmented, cn } from "./ui";
 import { useUiStore } from "../store/ui";
 import { API_URL, fetchAiAppointments, streamChat, type AiAppointment, type ChatMessage } from "../lib/ai";
+import { useSpeechToText, useTextToSpeech } from "../lib/speech";
 
 const GREETING =
   "Hola. Soy el asistente del consultorio: consulto tratamientos, obras sociales y horarios reales de la agenda, y puedo dejar turnos. ¿En qué te doy una mano?";
@@ -31,6 +32,11 @@ export function AssistantDock() {
   const historyRef = useRef<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { isSupported: sttSupported, listening, start: startListening, stop: stopListening } = useSpeechToText(
+    useCallback((text: string) => setDraft((prev) => (prev ? `${prev} ${text}` : text)), []),
+  );
+  const { isSupported: ttsSupported, speakingId, speak, stop: stopSpeaking } = useTextToSpeech();
 
   const refreshAppointments = useCallback(async () => {
     setLoadingAppointments(true);
@@ -167,19 +173,43 @@ export function AssistantDock() {
           {tab === "chat" ? (
             <>
               <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
-                {messages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={cn(
-                      "w-fit max-w-[88%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm",
-                      message.role === "user"
-                        ? "ml-auto rounded-br-md bg-accent text-white"
-                        : "rounded-bl-md bg-soft text-ink ring-1 ring-line",
-                    )}
-                  >
-                    {message.content || (busy ? <TypingDots /> : "")}
-                  </div>
-                ))}
+                {messages.map((message, index) => {
+                  const bubbleId = String(index);
+                  const speaking = speakingId === bubbleId;
+                  return (
+                    <div
+                      key={index}
+                      className={cn(
+                        "group flex w-fit max-w-[88%] items-end gap-1.5",
+                        message.role === "user" ? "ml-auto flex-row-reverse" : "",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm",
+                          message.role === "user"
+                            ? "rounded-br-md bg-accent text-white"
+                            : "rounded-bl-md bg-soft text-ink ring-1 ring-line",
+                        )}
+                      >
+                        {message.content || (busy ? <TypingDots /> : "")}
+                      </div>
+                      {message.role === "assistant" && message.content && ttsSupported ? (
+                        <button
+                          type="button"
+                          aria-label={speaking ? "Detener lectura" : "Leer en voz alta"}
+                          onClick={() => (speaking ? stopSpeaking() : speak(bubbleId, message.content))}
+                          className={cn(
+                            "mb-0.5 rounded-full p-1.5 text-muted opacity-0 transition-opacity hover:bg-soft hover:text-ink group-hover:opacity-100",
+                            speaking && "text-accent opacity-100",
+                          )}
+                        >
+                          <Volume2 size={14} />
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                })}
 
                 {historyRef.current.length === 0 ? (
                   <div className="flex flex-wrap gap-2 pt-2">
@@ -220,10 +250,25 @@ export function AssistantDock() {
                     ref={inputRef}
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
-                    placeholder="Pedile un turno o hacé una consulta…"
+                    placeholder={listening ? "Escuchando…" : "Pedile un turno o hacé una consulta…"}
                     autoComplete="off"
                     className="h-10 w-full rounded-lg border border-line bg-panel px-3 text-sm outline-none placeholder:text-muted focus:border-accent"
                   />
+                  {sttSupported ? (
+                    <button
+                      type="button"
+                      onClick={() => (listening ? stopListening() : startListening())}
+                      aria-label={listening ? "Detener dictado" : "Dictar por voz"}
+                      className={cn(
+                        "inline-flex size-10 shrink-0 items-center justify-center rounded-lg border transition-colors",
+                        listening
+                          ? "animate-pulse border-error bg-error/10 text-error"
+                          : "border-line bg-panel text-body hover:bg-soft",
+                      )}
+                    >
+                      <Mic size={16} />
+                    </button>
+                  ) : null}
                   <button
                     type="submit"
                     disabled={busy || draft.trim().length === 0}

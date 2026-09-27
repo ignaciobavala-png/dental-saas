@@ -1,14 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { buildPublicTools, createAppointmentInput, getAvailableSlotsInput } from '../src/ai/tools';
-import { publicVisitorContext } from '../src/ai/context';
-import { resetStore } from '../src/domain/fixture';
 import { availabilityService, bookingService } from '../src/domain/services';
-
-const RANGE = { serviceId: 'svc_general', dateFrom: '2026-10-05', dateTo: '2026-10-11' };
+import { seedDemoClinic } from './helpers';
 
 describe('secretaría — boundary de tools', () => {
-  beforeEach(() => resetStore());
-
   it('el inputSchema de create_appointment rechaza un clinic_id inyectado', () => {
     const result = createAppointmentInput.safeParse({
       clinicId: 'cl_otra',
@@ -22,12 +17,18 @@ describe('secretaría — boundary de tools', () => {
   });
 
   it('get_available_slots también rechaza un clinic_id en los args', () => {
-    const result = getAvailableSlotsInput.safeParse({ ...RANGE, clinic_id: 'cl_otra' });
+    const result = getAvailableSlotsInput.safeParse({
+      serviceId: 'svc_general',
+      dateFrom: '2026-10-05',
+      dateTo: '2026-10-11',
+      clinic_id: 'cl_otra',
+    });
     expect(result.success).toBe(false);
   });
 
-  it('el visitante recibe las tools públicas', () => {
-    const tools = buildPublicTools(publicVisitorContext);
+  it('el visitante recibe las tools públicas', async () => {
+    const { ctx, db } = await seedDemoClinic();
+    const tools = buildPublicTools(ctx, db);
     expect(Object.keys(tools).sort()).toEqual([
       'create_appointment',
       'get_available_slots',
@@ -39,18 +40,27 @@ describe('secretaría — boundary de tools', () => {
 });
 
 describe('secretaría — disponibilidad y reserva', () => {
-  beforeEach(() => resetStore());
-
-  it('devuelve horarios para un rango con días de atención', () => {
-    const slots = availabilityService.slots(RANGE);
+  it('devuelve horarios para un rango con días de atención', async () => {
+    const { db, serviceId } = await seedDemoClinic();
+    const slots = await availabilityService.slots(db, {
+      serviceId,
+      dateFrom: '2026-10-05',
+      dateTo: '2026-10-11',
+    });
     expect(slots.length).toBeGreaterThan(0);
     expect(slots[0]).toHaveProperty('startsAt');
     expect(slots[0]).toHaveProperty('doctorId');
   });
 
-  it('reserva un turno y lo lista', () => {
-    const [slot] = availabilityService.slots(RANGE);
-    const booking = bookingService.create({
+  it('reserva un turno y lo lista', async () => {
+    const { db, serviceId } = await seedDemoClinic();
+    const [slot] = await availabilityService.slots(db, {
+      serviceId,
+      dateFrom: '2026-10-05',
+      dateTo: '2026-10-11',
+    });
+
+    const booking = await bookingService.create(db, {
       serviceId: slot.serviceId,
       doctorId: slot.doctorId,
       startsAt: slot.startsAt,
@@ -59,11 +69,16 @@ describe('secretaría — disponibilidad y reserva', () => {
     });
 
     expect(booking.status).toBe('pending');
-    expect(bookingService.list()).toHaveLength(1);
+    expect(await bookingService.list(db)).toHaveLength(1);
   });
 
-  it('rechaza reservar dos veces el mismo horario con el mismo profesional', () => {
-    const [slot] = availabilityService.slots(RANGE);
+  it('rechaza reservar dos veces el mismo horario con el mismo profesional', async () => {
+    const { db, serviceId } = await seedDemoClinic();
+    const [slot] = await availabilityService.slots(db, {
+      serviceId,
+      dateFrom: '2026-10-05',
+      dateTo: '2026-10-11',
+    });
     const input = {
       serviceId: slot.serviceId,
       doctorId: slot.doctorId,
@@ -71,7 +86,7 @@ describe('secretaría — disponibilidad y reserva', () => {
       patientName: 'Ana Gómez',
     };
 
-    bookingService.create(input);
-    expect(() => bookingService.create(input)).toThrow(/se acaba de ocupar/);
+    await bookingService.create(db, input);
+    await expect(bookingService.create(db, input)).rejects.toThrow(/se acaba de ocupar/);
   });
 });

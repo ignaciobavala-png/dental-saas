@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   CalendarDays,
   ClipboardList,
+  Globe,
   LayoutDashboard,
+  LogOut,
   Menu,
   Settings,
   Stethoscope,
@@ -13,7 +15,15 @@ import {
 import { useUiStore } from "../store/ui";
 import { Avatar, cn } from "./ui";
 import { AssistantDock } from "./AssistantDock";
-import { clinic, devUser } from "../lib/mock";
+import { OnboardingTour } from "./OnboardingTour";
+import { useLogout, useMe } from "../lib/queries";
+
+const ROLE_LABEL: Record<string, string> = {
+  owner: "Dueño/a",
+  admin: "Administración",
+  dentist: "Odontólogo/a",
+  receptionist: "Recepción",
+};
 
 const NAV: Array<{ to: string; label: string; icon: ReactNode; end?: boolean }> = [
   { to: "/", label: "Hoy", icon: <LayoutDashboard size={18} />, end: true },
@@ -21,29 +31,43 @@ const NAV: Array<{ to: string; label: string; icon: ReactNode; end?: boolean }> 
   { to: "/pacientes", label: "Pacientes", icon: <Users size={18} /> },
   { to: "/profesionales", label: "Profesionales", icon: <Stethoscope size={18} /> },
   { to: "/tratamientos", label: "Tratamientos", icon: <ClipboardList size={18} /> },
+  { to: "/landing", label: "Landing", icon: <Globe size={18} /> },
   { to: "/configuracion", label: "Configuración", icon: <Settings size={18} /> },
 ];
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+  const { data } = useMe();
+  const logout = useLogout();
+  const navigate = useNavigate();
+  const user = data?.user;
+  const membership = data?.memberships[0];
+  const clinicName = membership?.clinic?.name ?? "Tu consultorio";
+
+  async function onLogout() {
+    await logout.mutateAsync();
+    navigate("/login", { replace: true });
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2.5 px-5 py-5">
         <span className="grid size-9 place-items-center rounded-lg bg-accent text-base font-bold text-white">
-          A
+          E
         </span>
-        <div className="leading-tight">
-          <p className="font-display text-sm font-bold tracking-tight">{clinic.name}</p>
+        <div className="min-w-0 leading-tight">
+          <p className="truncate font-display text-sm font-bold tracking-tight">{clinicName}</p>
           <p className="text-xs text-muted">Panel del consultorio</p>
         </div>
       </div>
 
-      <nav className="mx-3 flex flex-1 flex-col gap-0.5 rounded-2xl bg-soft p-1.5">
+      <nav className="mx-3 flex flex-1 flex-col gap-0.5 rounded-2xl bg-soft p-1.5" data-tour="nav">
         {NAV.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.end}
             onClick={onNavigate}
+            data-tour={`nav-${item.to === "/" ? "hoy" : item.to.slice(1)}`}
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
@@ -61,11 +85,19 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
       <div className="m-3 rounded-xl bg-soft p-3">
         <div className="flex items-center gap-3">
-          <Avatar name={devUser.name} size={36} />
-          <div className="min-w-0 leading-tight">
-            <p className="truncate text-sm font-medium">{devUser.name}</p>
-            <p className="truncate text-xs text-muted">Dueña · sesión de dev</p>
+          <Avatar name={user?.name ?? "?"} size={36} />
+          <div className="min-w-0 flex-1 leading-tight">
+            <p className="truncate text-sm font-medium">{user?.name ?? "…"}</p>
+            <p className="truncate text-xs text-muted">{membership ? ROLE_LABEL[membership.role] : ""}</p>
           </div>
+          <button
+            type="button"
+            aria-label="Cerrar sesión"
+            onClick={() => void onLogout()}
+            className="rounded-lg p-2 text-muted transition-colors hover:bg-panel hover:text-ink"
+          >
+            <LogOut size={16} />
+          </button>
         </div>
       </div>
     </div>
@@ -131,6 +163,7 @@ export function AppShell() {
       </div>
 
       <AssistantDock />
+      <OnboardingTour />
     </div>
   );
 }

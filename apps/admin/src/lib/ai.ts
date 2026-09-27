@@ -1,4 +1,4 @@
-export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8787";
+export const API_URL = import.meta.env.VITE_API_URL ?? "";
 
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -19,6 +19,7 @@ export async function streamChat(
   const res = await fetch(`${API_URL}/api/secretaria/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({ messages }),
     signal,
   });
@@ -43,7 +44,7 @@ export async function streamChat(
 }
 
 export async function fetchAiAppointments(): Promise<AiAppointment[]> {
-  const res = await fetch(`${API_URL}/api/secretaria/appointments`);
+  const res = await fetch(`${API_URL}/api/secretaria/appointments`, { credentials: "include" });
   if (!res.ok) return [];
   const data = (await res.json()) as { appointments?: AiAppointment[] };
   return data.appointments ?? [];

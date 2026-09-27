@@ -1,10 +1,9 @@
 // Contenido del sitio de marketing del producto. Fixture editable.
-// El nombre "Alvea" es provisorio: cambiarlo por el definitivo cuando se defina.
 
 export const product = {
-  name: 'Alvea',
-  domain: 'alvea.com.ar',
-  appUrl: 'https://app.alvea.com.ar',
+  name: 'Evolución Dental',
+  domain: 'evoluciondental.com',
+  appUrl: 'https://app.evoluciondental.com',
 } as const;
 
 export const nav = [
@@ -216,7 +215,7 @@ export const footer = {
     {
       title: 'Contacto',
       links: [
-        { label: 'hola@alvea.com.ar', href: 'mailto:hola@alvea.com.ar' },
+        { label: 'hola@evoluciondental.com', href: 'mailto:hola@evoluciondental.com' },
         { label: 'WhatsApp', href: 'https://wa.me/5491100000000' },
       ],
     },

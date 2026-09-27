@@ -1,9 +1,15 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import type { Env } from './env';
+import type { AppBindings } from './env';
 import { secretaria } from './routes/secretaria';
+import { auth } from './routes/auth';
+import { clinic } from './routes/clinic';
+import { doctors } from './routes/doctors';
+import { services } from './routes/services';
+import { patients } from './routes/patients';
+import { appointments } from './routes/appointments';
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<AppBindings>();
 
 app.use('/api/*', (c, next) =>
   cors({
@@ -12,13 +18,20 @@ app.use('/api/*', (c, next) =>
       const allowed = c.env?.ALLOWED_ORIGIN;
       return allowed && origin === allowed ? origin : undefined;
     },
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type'],
+    credentials: true,
   })(c, next),
 );
 
 app.get('/api/health', (c) => c.json({ ok: true }));
 
+app.route('/api/auth', auth);
+app.route('/api/clinic', clinic);
+app.route('/api/doctors', doctors);
+app.route('/api/services', services);
+app.route('/api/patients', patients);
+app.route('/api/appointments', appointments);
 app.route('/api/secretaria', secretaria);
 
 export default app;

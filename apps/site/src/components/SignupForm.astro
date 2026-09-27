@@ -1,0 +1,110 @@
+---
+const API_URL = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8787';
+const APP_URL = import.meta.env.PUBLIC_APP_URL ?? 'http://localhost:5173';
+---
+
+<form
+  id="signup-form"
+  data-api-url={API_URL}
+  data-app-url={APP_URL}
+  class="mx-auto mt-8 max-w-md space-y-3 text-left"
+>
+  <div class="grid gap-3 sm:grid-cols-2">
+    <label class="block text-sm">
+      <span class="mb-1.5 block font-medium text-ink">Tu nombre</span>
+      <input
+        name="name"
+        required
+        autocomplete="name"
+        class="h-11 w-full rounded-lg border border-line bg-canvas px-3.5 text-sm outline-none placeholder:text-muted focus:border-accent"
+      />
+    </label>
+    <label class="block text-sm">
+      <span class="mb-1.5 block font-medium text-ink">Tu consultorio</span>
+      <input
+        name="clinicName"
+        required
+        placeholder="Ej. Odontología Arocena"
+        class="h-11 w-full rounded-lg border border-line bg-canvas px-3.5 text-sm outline-none placeholder:text-muted focus:border-accent"
+      />
+    </label>
+  </div>
+  <label class="block text-sm">
+    <span class="mb-1.5 block font-medium text-ink">Email</span>
+    <input
+      name="email"
+      type="email"
+      required
+      autocomplete="email"
+      class="h-11 w-full rounded-lg border border-line bg-canvas px-3.5 text-sm outline-none placeholder:text-muted focus:border-accent"
+    />
+  </label>
+  <label class="block text-sm">
+    <span class="mb-1.5 block font-medium text-ink">Contraseña</span>
+    <input
+      name="password"
+      type="password"
+      required
+      minlength="8"
+      autocomplete="new-password"
+      class="h-11 w-full rounded-lg border border-line bg-canvas px-3.5 text-sm outline-none placeholder:text-muted focus:border-accent"
+    />
+  </label>
+
+  <p data-error class="hidden text-sm text-error"></p>
+
+  <button
+    type="submit"
+    class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-accent text-sm font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    Crear mi cuenta
+  </button>
+  <p class="text-center text-xs text-muted">Sin tarjeta. Empezás en modo prueba.</p>
+</form>
+
+<script>
+  const form = document.getElementById('signup-form') as HTMLFormElement | null;
+  if (form) {
+    const apiUrl = form.dataset.apiUrl ?? '';
+    const appUrl = form.dataset.appUrl ?? '';
+    const errorEl = form.querySelector('[data-error]') as HTMLElement | null;
+    const button = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!button) return;
+      errorEl?.classList.add('hidden');
+      button.disabled = true;
+      button.textContent = 'Creando tu cuenta…';
+
+      const data = new FormData(form);
+      try {
+        const res = await fetch(`${apiUrl}/api/auth/signup`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: data.get('name'),
+            clinicName: data.get('clinicName'),
+            email: data.get('email'),
+            password: data.get('password'),
+          }),
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.error ?? 'No se pudo crear la cuenta.');
+        }
+
+        window.location.href = appUrl;
+      } catch (err) {
+        if (errorEl) {
+          errorEl.textContent = err instanceof Error ? err.message : 'No se pudo crear la cuenta.';
+          errorEl.classList.remove('hidden');
+        }
+        button.disabled = false;
+        button.textContent = 'Crear mi cuenta';
+      }
+    });
+  }
+</script>

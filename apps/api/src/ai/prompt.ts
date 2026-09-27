@@ -1,13 +1,12 @@
+import type { TenantDb } from '@dental/core';
 import { catalogService, clinicService } from '../domain/services';
 
-export function buildPublicSystemPrompt(): string {
-  const info = clinicService.info();
-  const services = catalogService
-    .services()
-    .map((s) => `- ${s.name} (${s.durationMin} min): ${s.description ?? ''}`)
+export async function buildPublicSystemPrompt(db: TenantDb): Promise<string> {
+  const info = await clinicService.info(db);
+  const services = (await catalogService.services(db))
+    .map((s) => `- ${s.name} (${s.duration_min} min): ${s.description ?? ''}`)
     .join('\n');
-  const team = catalogService
-    .doctors()
+  const team = (await catalogService.doctors(db))
     .map((d) => `- ${d.name} — ${d.specialty ?? 'odontología'}`)
     .join('\n');
 

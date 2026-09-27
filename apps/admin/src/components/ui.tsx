@@ -136,6 +136,7 @@ type ButtonProps = {
   variant?: "primary" | "ghost" | "outline";
   size?: "sm" | "md";
   type?: "button" | "submit";
+  form?: string;
   onClick?: () => void;
   disabled?: boolean;
   className?: string;
@@ -146,6 +147,7 @@ export function Button({
   variant = "primary",
   size = "md",
   type = "button",
+  form,
   onClick,
   disabled,
   className,
@@ -159,7 +161,7 @@ export function Button({
     ghost: "text-body hover:bg-soft hover:text-ink",
   }[variant];
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={cn(base, sizes, variants, className)}>
+    <button type={type} form={form} onClick={onClick} disabled={disabled} className={cn(base, sizes, variants, className)}>
       {children}
     </button>
   );

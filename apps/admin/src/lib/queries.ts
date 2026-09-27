@@ -1,4 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  fetchClinicSettings,
+  fetchMe,
+  login as apiLogin,
+  logout as apiLogout,
+  saveClinicSettings,
+  signup as apiSignup,
+} from "./api";
 import type {
   AiInquiry,
   Appointment,
@@ -198,5 +206,56 @@ export function useSettings() {
   return useQuery({
     queryKey: ["settings"],
     queryFn: () => delay<ClinicSettings>(settings),
+  });
+}
+
+// --- Sesión real (auth) -----------------------------------------------
+
+export function useMe() {
+  return useQuery({
+    queryKey: ["me"],
+    queryFn: fetchMe,
+    retry: false,
+  });
+}
+
+export function useLogin() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { email: string; password: string }) => apiLogin(input.email, input.password),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["me"] }),
+  });
+}
+
+export function useSignup() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: apiSignup,
+    onSuccess: () => client.invalidateQueries({ queryKey: ["me"] }),
+  });
+}
+
+export function useLogout() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: apiLogout,
+    onSuccess: () => client.invalidateQueries({ queryKey: ["me"] }),
+  });
+}
+
+// --- Landing del consultorio (clinic_settings real) --------------------
+
+export function useClinicSettings() {
+  return useQuery({
+    queryKey: ["clinic-settings"],
+    queryFn: fetchClinicSettings,
+  });
+}
+
+export function useSaveClinicSettings() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: saveClinicSettings,
+    onSuccess: () => client.invalidateQueries({ queryKey: ["clinic-settings"] }),
   });
 }
