@@ -6,12 +6,12 @@ import { API_URL, fetchAiAppointments, streamChat, type AiAppointment, type Chat
 import { useSpeechToText, useTextToSpeech } from "../lib/speech";
 
 const GREETING =
-  "Hola. Soy el asistente del consultorio: consulto tratamientos, obras sociales y horarios reales de la agenda, y puedo dejar turnos. ¿En qué te doy una mano?";
+  "Hola, soy tu copiloto interno. Puedo revisar disponibilidad real de la agenda y dejar turnos a nombre de quien te llame. ¿En qué te ayudo?";
 
 const SUGGESTIONS = [
   "¿Qué horarios hay mañana para una limpieza?",
-  "¿Atienden OSDE?",
-  "Reservame un turno de ortodoncia el jueves a la tarde",
+  "Sacale un turno de ortodoncia el jueves a la tarde a un paciente que me llamó",
+  "¿Qué profesionales atienden endodoncia?",
 ];
 
 type Tab = "chat" | "turnos";
@@ -125,7 +125,7 @@ export function AssistantDock() {
           aria-label="Abrir asistente IA"
         >
           <Sparkles size={18} />
-          <span className="hidden sm:inline">Asistente</span>
+          <span className="hidden sm:inline">Copiloto</span>
           {appointments.length > 0 ? (
             <span className="grid size-5 place-items-center rounded-full bg-white/20 text-[11px]">
               {appointments.length}
@@ -144,9 +144,9 @@ export function AssistantDock() {
               <Sparkles size={17} />
             </span>
             <div className="min-w-0 leading-tight">
-              <p className="truncate text-sm font-semibold">Asistente del consultorio</p>
+              <p className="truncate text-sm font-semibold">Copiloto interno</p>
               <p className="truncate text-xs text-muted">
-                {busy ? "escribiendo…" : "DeepSeek · agenda real"}
+                {busy ? "escribiendo…" : "Solo para el equipo · agenda real"}
               </p>
             </div>
             <button
@@ -250,7 +250,7 @@ export function AssistantDock() {
                     ref={inputRef}
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
-                    placeholder={listening ? "Escuchando…" : "Pedile un turno o hacé una consulta…"}
+                    placeholder={listening ? "Escuchando…" : "Preguntale al copiloto o pedile que agende un turno…"}
                     autoComplete="off"
                     className="h-10 w-full rounded-lg border border-line bg-panel px-3 text-sm outline-none placeholder:text-muted focus:border-accent"
                   />

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { AppBindings } from './env';
 import { secretaria } from './routes/secretaria';
+import { asistente } from './routes/asistente';
 import { auth } from './routes/auth';
 import { clinic } from './routes/clinic';
 import { doctors } from './routes/doctors';
@@ -33,5 +34,6 @@ app.route('/api/services', services);
 app.route('/api/patients', patients);
 app.route('/api/appointments', appointments);
 app.route('/api/secretaria', secretaria);
+app.route('/api/asistente', asistente);
 
 export default app;

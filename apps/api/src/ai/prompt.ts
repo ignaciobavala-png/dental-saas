@@ -2,6 +2,16 @@ import type { TenantDb } from '@dental/core';
 import { catalogService, clinicService } from '../domain/services';
 
 export async function buildPublicSystemPrompt(db: TenantDb): Promise<string> {
+  return buildSystemPrompt(db, { audience: 'public' });
+}
+
+export async function buildInternalSystemPrompt(db: TenantDb, staffName: string): Promise<string> {
+  return buildSystemPrompt(db, { audience: 'internal', staffName });
+}
+
+type PromptAudience = { audience: 'public' } | { audience: 'internal'; staffName: string };
+
+async function buildSystemPrompt(db: TenantDb, audience: PromptAudience): Promise<string> {
   const info = await clinicService.info(db);
   const services = (await catalogService.services(db))
     .map((s) => `- ${s.name} (${s.duration_min} min): ${s.description ?? ''}`)
@@ -10,10 +20,7 @@ export async function buildPublicSystemPrompt(db: TenantDb): Promise<string> {
     .map((d) => `- ${d.name} — ${d.specialty ?? 'odontología'}`)
     .join('\n');
 
-  return `Sos la secretaria virtual de ${info.name}, un consultorio odontológico en ${info.address}.
-Atendés a pacientes por chat, en español rioplatense (voseo), con tono cálido y profesional.
-
-DATOS DE LA CLÍNICA
+  const clinicBlock = `DATOS DE LA CLÍNICA
 - Dirección: ${info.address}
 - Teléfono: ${info.phone}
 - WhatsApp: ${info.whatsapp}
@@ -28,7 +35,24 @@ PROFESIONALES
 ${team}
 
 PREGUNTAS FRECUENTES
-${info.faqs.map((f) => `P: ${f.q}\nR: ${f.a}`).join('\n')}
+${info.faqs.map((f) => `P: ${f.q}\nR: ${f.a}`).join('\n')}`;
+
+  if (audience.audience === 'internal') {
+    return `Sos el copiloto interno de ${info.name} para el equipo del consultorio. Te habla ${audience.staffName}, alguien del staff usando el panel de control — no un paciente. Hablále como a un colega: directo, sin venderle el consultorio ni presentarte como "la secretaria virtual".
+
+${clinicBlock}
+
+CÓMO TRABAJÁS
+1. Respondé en 1 a 3 oraciones cortas y concretas.
+2. Podés consultar disponibilidad, servicios y profesionales, y reservar turnos en nombre de un paciente que el staff te indique (por ejemplo, alguien que llamó por teléfono). Para reservar necesitás el tratamiento, un horario confirmado con get_available_slots, y el nombre y contacto del paciente.
+3. Nunca inventes precios, coberturas, horarios ni disponibilidad: si no lo sabés, usá las tools.
+4. Todavía no tenés acceso a fichas clínicas, facturación ni historial de pacientes desde este chat — si te preguntan algo de eso, aclaralo en vez de inventar una respuesta.`;
+  }
+
+  return `Sos la secretaria virtual de ${info.name}, un consultorio odontológico en ${info.address}.
+Atendés a pacientes por chat, en español rioplatense (voseo), con tono cálido y profesional.
+
+${clinicBlock}
 
 CÓMO TRABAJÁS
 1. Respondé en 1 a 3 oraciones cortas. Nada de discursos largos.

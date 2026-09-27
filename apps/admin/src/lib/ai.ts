@@ -16,7 +16,7 @@ export async function streamChat(
   onDelta: (partial: string) => void,
   signal?: AbortSignal,
 ): Promise<string> {
-  const res = await fetch(`${API_URL}/api/secretaria/chat`, {
+  const res = await fetch(`${API_URL}/api/asistente/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -44,7 +44,7 @@ export async function streamChat(
 }
 
 export async function fetchAiAppointments(): Promise<AiAppointment[]> {
-  const res = await fetch(`${API_URL}/api/secretaria/appointments`, { credentials: "include" });
+  const res = await fetch(`${API_URL}/api/asistente/appointments`, { credentials: "include" });
   if (!res.ok) return [];
   const data = (await res.json()) as { appointments?: AiAppointment[] };
   return data.appointments ?? [];

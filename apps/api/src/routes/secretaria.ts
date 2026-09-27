@@ -3,8 +3,6 @@ import { z } from 'zod';
 import { stepCountIs, streamText } from 'ai';
 import { clinicsRepo, createTenantContext, TenantDb, type TenantContext } from '@dental/core';
 import type { AppBindings } from '../env';
-import { getSessionUser } from '../middleware/auth';
-import { resolveTenantContext } from '../middleware/tenant';
 import { buildPublicSystemPrompt } from '../ai/prompt';
 import { deepseekModel } from '../ai/provider';
 import { buildPublicTools } from '../ai/tools';
@@ -24,21 +22,13 @@ const bodySchema = z.object({
 export const secretaria = new Hono<AppBindings>();
 
 /**
- * El agente público (secretaría) se identifica siempre como `visitor`, sin
- * importar si quien llama es un visitante anónimo de la landing o el propio
- * consultorio previsualizando el bot desde el panel. Lo único que cambia es
- * qué clínica se resuelve:
- * - Sesión válida (panel) → la clínica activa del usuario logueado.
- * - Sin sesión (landing pública) → `?clinic=<slug>`, como si viniera resuelto
- *   por hostname (esa resolución vive en `apps/landing`, fuera de esta tanda).
+ * Cara pública del asistente: la secretaria virtual que ve cualquier
+ * visitante anónimo de la landing del consultorio, resuelto por
+ * `?clinic=<slug>` (hoy) o por hostname más adelante. Nunca depende de
+ * sesión — para eso está `/api/asistente` (routes/asistente.ts), la cara
+ * interna que usa el staff logueado desde el panel.
  */
 async function resolvePublicContext(c: import('hono').Context<AppBindings>): Promise<TenantContext | null> {
-  const user = await getSessionUser(c);
-  if (user) {
-    const ctx = await resolveTenantContext(c, user);
-    if (ctx) return createTenantContext({ clinicId: ctx.clinicId, userId: ctx.userId, role: 'visitor' });
-  }
-
   const slug = c.req.query('clinic');
   if (!slug) return null;
   const clinic = await clinicsRepo(c.env.DB).bySlug(slug);
