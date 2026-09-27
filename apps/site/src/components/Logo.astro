@@ -1,0 +1,13 @@
+---
+import { product } from '../data/product';
+
+interface Props {
+  class?: string;
+}
+const { class: cls = '' } = Astro.props;
+---
+
+<a href="#top" class={`inline-flex items-center gap-2 ${cls}`} aria-label={`${product.name}, inicio`}>
+  <span class="grid size-8 place-items-center rounded-lg bg-accent text-sm font-bold text-white">A</span>
+  <span class="font-display text-base font-bold tracking-tight">{product.name}</span>
+</a>

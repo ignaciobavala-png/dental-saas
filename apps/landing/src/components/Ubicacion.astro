@@ -1,0 +1,57 @@
+---
+import { clinic } from '../data/clinic';
+
+const bbox = '-58.4522,-34.6257,-58.4322,-34.6137';
+const marker = '-34.6197,-58.4422';
+const osm = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${marker}`;
+---
+<section id="ubicacion" class="scroll-mt-20">
+  <div class="mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:px-8 md:py-24 lg:grid-cols-2 lg:gap-16">
+    <div class="reveal max-w-lg">
+      <h2 class="font-display text-3xl font-semibold tracking-tight text-ink md:text-4xl">
+        Cómo llegar
+      </h2>
+      <p class="mt-4 leading-relaxed text-muted">
+        A dos cuadras de la estación Caballito de la Línea B. Hay estacionamiento medido sobre Rivadavia.
+      </p>
+
+      <dl class="mt-8 space-y-5 text-sm">
+        <div>
+          <dt class="font-medium text-ink">Dirección</dt>
+          <dd class="text-muted">{clinic.address.street}, {clinic.address.locality}, {clinic.address.city}</dd>
+        </div>
+        <div>
+          <dt class="font-medium text-ink">Horarios</dt>
+          {clinic.hours.map((h) => (
+            <dd class="text-muted">{h.day}: {h.time}</dd>
+          ))}
+        </div>
+        <div>
+          <dt class="font-medium text-ink">Contacto</dt>
+          <dd class="text-muted">
+            <a href={clinic.phoneHref} class="hover:text-ink">{clinic.phone}</a> · <a href={`mailto:${clinic.email}`} class="hover:text-ink">{clinic.email}</a>
+          </dd>
+        </div>
+      </dl>
+
+      <a
+        href={clinic.mapsUrl}
+        target="_blank"
+        rel="noopener"
+        class="mt-8 inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink/30"
+      >
+        Ver en Google Maps <span aria-hidden="true">→</span>
+      </a>
+    </div>
+
+    <div class="reveal overflow-hidden rounded-2xl border border-line">
+      <iframe
+        title="Mapa del consultorio en Caballito, CABA"
+        src={osm}
+        class="h-[320px] w-full md:h-[420px]"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+      ></iframe>
+    </div>
+  </div>
+</section>

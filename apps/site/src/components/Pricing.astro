@@ -1,0 +1,40 @@
+---
+import { Check } from 'lucide-astro';
+import { pricing } from '../data/product';
+import Container from './Container.astro';
+import Button from './Button.astro';
+---
+
+<section id="precios" class="border-y border-line bg-soft py-20 sm:py-24">
+  <Container>
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Un precio, todo incluido</h2>
+      <p class="mt-3 text-base text-body">Sin planes por niveles ni módulos extra.</p>
+    </div>
+
+    <div class="reveal mx-auto mt-10 max-w-4xl overflow-hidden rounded-xl border border-line bg-canvas">
+      <div class="grid gap-8 p-7 sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
+        <div>
+          <p class="flex items-baseline gap-2">
+            <span class="font-display text-4xl font-bold tracking-tight sm:text-5xl">{pricing.price}</span>
+            <span class="text-sm text-muted">{pricing.period}</span>
+          </p>
+          <p class="mt-3 text-sm text-body">{pricing.note}</p>
+          <div class="mt-6 flex flex-col gap-2.5 sm:flex-row">
+            <Button href={pricing.cta.href}>{pricing.cta.label}</Button>
+            <Button href={pricing.secondary.href} variant="outline">{pricing.secondary.label}</Button>
+          </div>
+        </div>
+
+        <ul class="grid grid-cols-1 gap-x-6 gap-y-2.5 sm:grid-cols-2 lg:border-l lg:border-line lg:pl-10">
+          {pricing.includes.map((item) => (
+            <li class="flex items-start gap-2 text-sm text-body">
+              <Check size={16} class="mt-0.5 shrink-0 text-ink" />
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </Container>
+</section>

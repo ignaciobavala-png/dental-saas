@@ -1,0 +1,36 @@
+---
+import { clinic } from '../data/clinic';
+const year = new Date().getFullYear();
+---
+<footer class="border-t border-line">
+  <div class="mx-auto grid max-w-6xl gap-8 px-5 py-12 md:grid-cols-3 md:px-8">
+    <div>
+      <p class="font-display text-lg font-semibold tracking-tight text-ink">{clinic.fullName}</p>
+      <p class="mt-2 text-sm text-muted">{clinic.tagline}</p>
+    </div>
+
+    <div class="text-sm">
+      <p class="font-medium text-ink">Consultorio</p>
+      <p class="mt-2 text-muted">{clinic.address.street}</p>
+      <p class="text-muted">{clinic.address.locality}, {clinic.address.city}</p>
+    </div>
+
+    <div class="text-sm">
+      <p class="font-medium text-ink">Contacto</p>
+      <p class="mt-2">
+        <a href={clinic.phoneHref} class="text-muted hover:text-ink">{clinic.phone}</a>
+      </p>
+      <p>
+        <a href={clinic.whatsapp} target="_blank" rel="noopener" class="text-muted hover:text-ink">WhatsApp</a>
+      </p>
+      <p>
+        <a href={`mailto:${clinic.email}`} class="text-muted hover:text-ink">{clinic.email}</a>
+      </p>
+    </div>
+  </div>
+  <div class="border-t border-line">
+    <p class="mx-auto max-w-6xl px-5 py-5 text-xs text-muted md:px-8">
+      © {year} {clinic.fullName}. Todos los derechos reservados.
+    </p>
+  </div>
+</footer>

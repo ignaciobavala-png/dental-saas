@@ -1,0 +1,11 @@
+---
+import { clinic } from '../data/clinic';
+---
+<section class="border-y border-line bg-surface">
+  <div class="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-6 md:flex-row md:items-center md:gap-10 md:px-8">
+    <p class="shrink-0 text-sm text-muted">Trabajamos con obras sociales y prepagas</p>
+    <ul class="flex flex-wrap items-center gap-x-7 gap-y-2 text-sm font-medium text-ink/70">
+      {clinic.obrasSociales.map((o) => <li>{o}</li>)}
+    </ul>
+  </div>
+</section>

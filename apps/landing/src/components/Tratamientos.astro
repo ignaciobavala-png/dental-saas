@@ -1,0 +1,32 @@
+---
+import { clinic } from '../data/clinic';
+---
+<section id="tratamientos" class="scroll-mt-20">
+  <div class="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-24">
+    <div class="reveal max-w-2xl">
+      <h2 class="font-display text-3xl font-semibold tracking-tight text-ink md:text-4xl">
+        Tratamientos que resolvemos en el consultorio
+      </h2>
+      <p class="mt-4 leading-relaxed text-muted">
+        Desde el control anual hasta implantes. Al reservar te decimos cuánto dura y cuánto sale, sin sorpresas.
+      </p>
+    </div>
+
+    <ul class="reveal mt-12 divide-y divide-line border-t border-line">
+      {clinic.treatments.map((t) => (
+        <li class="grid grid-cols-1 items-baseline gap-2 py-6 sm:grid-cols-[1.4fr_1fr_auto] sm:gap-6">
+          <div>
+            <h3 class="font-display text-xl font-semibold text-ink">{t.name}</h3>
+            <p class="mt-1 text-sm leading-relaxed text-muted">{t.detail}</p>
+          </div>
+          <p class="text-sm text-muted sm:pt-1">{t.duration}</p>
+          <p class="font-medium text-ink sm:pt-1 sm:text-right">{t.price}</p>
+        </li>
+      ))}
+    </ul>
+
+    <a href="#reservar" class="mt-10 inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline">
+      Reservar un turno <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</section>

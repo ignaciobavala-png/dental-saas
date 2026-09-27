@@ -1,0 +1,23 @@
+{
+  "name": "@dental/landing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "typecheck": "astro check",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.3.0",
+    "@dental/contracts": "workspace:*",
+    "@dental/theme": "workspace:*",
+    "astro": "^7.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^5.7.0"
+  }
+}

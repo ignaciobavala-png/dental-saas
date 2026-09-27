@@ -1,0 +1,44 @@
+---
+import { clinic } from '../data/clinic';
+---
+<section id="inicio" class="relative overflow-hidden">
+  <div
+    class="mx-auto grid max-w-6xl items-center gap-10 px-5 pt-12 pb-14 md:px-8 md:pt-20 md:pb-20 lg:min-h-[calc(100svh-4rem)] lg:grid-cols-[1.05fr_1fr] lg:gap-16"
+  >
+    <div class="max-w-xl">
+      <h1 class="font-display text-4xl leading-[1.05] font-semibold tracking-tight text-ink sm:text-5xl md:text-6xl">
+        Tu dentista en Caballito, con turnos que se acomodan a tu día
+      </h1>
+      <p class="mt-6 max-w-[52ch] text-lg leading-relaxed text-muted">
+        Atendemos consultas, urgencias y tratamientos con turnos online y una secretaria que responde a toda hora.
+      </p>
+      <div class="mt-8 flex flex-wrap items-center gap-4">
+        <a
+          href="#reservar"
+          class="rounded-full bg-accent px-6 py-3.5 text-sm font-medium text-bone transition-colors hover:bg-accent-hover active:translate-y-px"
+        >
+          Reservar turno
+        </a>
+        <a
+          href="#tratamientos"
+          class="rounded-full border border-line px-6 py-3.5 text-sm font-medium text-ink transition-colors hover:border-ink/30"
+        >
+          Ver tratamientos
+        </a>
+      </div>
+    </div>
+
+    <div class="relative">
+      <div class="absolute -top-6 -right-6 hidden h-40 w-40 rounded-full bg-accent-soft lg:block" aria-hidden="true"></div>
+      <img
+        src="https://picsum.photos/seed/arocena-recepcion-consultorio/1080/1220"
+        alt="Recepción y sala de espera del consultorio de Odontología Arocena"
+        class="relative aspect-[9/10] w-full rounded-2xl object-cover shadow-[0_24px_60px_-30px_rgba(27,25,22,0.45)]"
+        width="1080"
+        height="1220"
+        loading="eager"
+        fetchpriority="high"
+      />
+    </div>
+  </div>
+</section>

@@ -1,0 +1,10 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# pnpm bloquea por defecto los scripts de instalación; sin aprobar estos el
+# toolchain de D1/Workers no arranca. Ver ADR-0008.
+onlyBuiltDependencies:
+  - esbuild
+  - workerd
+  - sharp

@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* Identidad visual: referencia Cal.com — ver DESIGN.md en la raíz del repo. */
+@theme {
+  --color-canvas: #ffffff;
+  --color-soft: #f8f9fa;
+  --color-card: #f5f5f5;
+  --color-strong: #e5e7eb;
+
+  --color-ink: #111111;
+  --color-body: #374151;
+  --color-muted: #6b7280;
+  --color-muted-soft: #898989;
+
+  --color-line: #e5e7eb;
+  --color-line-soft: #f3f4f6;
+
+  --color-accent: #111111;
+  --color-accent-hover: #242424;
+  --color-accent-soft: #f5f5f5;
+
+  --color-brand: #3b82f6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+
+  --color-dark: #101010;
+  --color-dark-elevated: #1a1a1a;
+  --color-on-dark-soft: #a1a1aa;
+
+  --color-badge-orange: #fb923c;
+  --color-badge-pink: #ec4899;
+  --color-badge-violet: #8b5cf6;
+  --color-badge-emerald: #34d399;
+
+  --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-canvas);
+    color-scheme: light;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    margin: 0;
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: var(--color-ink);
+    color: #ffffff;
+  }
+  details summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+.js .reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.js .reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

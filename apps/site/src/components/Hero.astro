@@ -1,0 +1,38 @@
+---
+import { hero } from '../data/product';
+import Container from './Container.astro';
+import Button from './Button.astro';
+---
+
+<section class="pt-16 sm:pt-20 lg:pt-24">
+  <Container>
+    <div class="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
+      <div class="reveal">
+        <h1 class="max-w-[15ch] text-4xl font-bold leading-[1.03] tracking-tighter text-ink sm:text-5xl lg:text-6xl">
+          {hero.title}
+        </h1>
+        <p class="mt-5 max-w-[52ch] text-base leading-relaxed text-body sm:text-lg">
+          {hero.subtitle}
+        </p>
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <Button href={hero.primaryCta.href}>{hero.primaryCta.label}</Button>
+          <Button href={hero.secondaryCta.href} variant="outline">{hero.secondaryCta.label}</Button>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <div class="overflow-hidden rounded-xl border border-line bg-canvas shadow-[0_4px_12px_rgba(16,16,16,0.06)]">
+          <img
+            src={hero.image.src}
+            alt={hero.image.alt}
+            width="1200"
+            height="840"
+            loading="eager"
+            fetchpriority="high"
+            class="aspect-[16/11] w-full object-cover object-top"
+          />
+        </div>
+      </div>
+    </div>
+  </Container>
+</section>

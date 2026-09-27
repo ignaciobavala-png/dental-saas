@@ -1,0 +1,23 @@
+---
+import { ArrowRightLeft, CalendarX2, Globe, ShieldCheck } from 'lucide-astro';
+import { trust } from '../data/product';
+import Container from './Container.astro';
+
+const icons = { Globe, ArrowRightLeft, CalendarX2, ShieldCheck };
+---
+
+<section class="mt-16 border-y border-line bg-soft sm:mt-20">
+  <Container>
+    <ul class="grid grid-cols-1 gap-x-6 gap-y-3 py-5 sm:grid-cols-2 lg:grid-cols-4">
+      {trust.map((item) => {
+        const Icon = icons[item.icon as keyof typeof icons];
+        return (
+          <li class="flex items-center gap-2.5 text-sm text-body">
+            <Icon size={18} class="shrink-0 text-ink" />
+            {item.label}
+          </li>
+        );
+      })}
+    </ul>
+  </Container>
+</section>

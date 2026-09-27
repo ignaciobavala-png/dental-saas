@@ -1,0 +1,35 @@
+---
+import { clinic } from '../data/clinic';
+---
+<section id="equipo" class="scroll-mt-20 bg-surface">
+  <div class="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-24">
+    <div class="reveal max-w-2xl">
+      <h2 class="font-display text-3xl font-semibold tracking-tight text-ink md:text-4xl">
+        Quiénes te atienden
+      </h2>
+      <p class="mt-4 leading-relaxed text-muted">
+        Un equipo chico y estable: siempre te atiende la misma persona que conoce tu historia.
+      </p>
+    </div>
+
+    <div class="mt-12 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+      {clinic.team.map((p) => (
+        <figure class="reveal">
+          <img
+            src={p.photo}
+            alt={`Retrato de ${p.name}`}
+            class="aspect-[4/5] w-full rounded-2xl object-cover"
+            width="720"
+            height="820"
+            loading="lazy"
+          />
+          <figcaption class="mt-4">
+            <h3 class="font-display text-lg font-semibold text-ink">{p.name}</h3>
+            <p class="text-sm text-muted">{p.role}</p>
+            <p class="mt-1 text-xs text-muted">{p.license}</p>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+  </div>
+</section>

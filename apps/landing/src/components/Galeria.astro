@@ -1,0 +1,31 @@
+---
+const shots = [
+  { seed: 'arocena-sala-espera', alt: 'Sala de espera del consultorio', cls: 'col-span-2 row-span-2 aspect-square' },
+  { seed: 'arocena-sillon-dental', alt: 'Sillón odontológico', cls: 'col-span-2 aspect-[2/1]' },
+  { seed: 'arocena-rayos-x', alt: 'Equipo de radiografía dental', cls: 'aspect-square' },
+  { seed: 'arocena-instrumental', alt: 'Instrumental esterilizado', cls: 'aspect-square' },
+];
+---
+<section id="consultorio" class="scroll-mt-20">
+  <div class="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-24">
+    <div class="reveal max-w-2xl">
+      <h2 class="font-display text-3xl font-semibold tracking-tight text-ink md:text-4xl">
+        El consultorio, por dentro
+      </h2>
+      <p class="mt-4 leading-relaxed text-muted">
+        Tres consultorios equipados, esterilización certificada y sala de espera con wifi.
+      </p>
+    </div>
+
+    <div class="reveal mt-12 grid grid-cols-2 gap-3 md:grid-cols-4">
+      {shots.map((s) => (
+        <img
+          src={`https://picsum.photos/seed/${s.seed}/900/900`}
+          alt={s.alt}
+          class={`w-full rounded-2xl object-cover ${s.cls}`}
+          loading="lazy"
+        />
+      ))}
+    </div>
+  </div>
+</section>

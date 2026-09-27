@@ -1,0 +1,17 @@
+---
+import { finalCta } from '../data/product';
+import Container from './Container.astro';
+import Button from './Button.astro';
+---
+
+<section id="empezar" class="border-t border-line pb-24 pt-20 sm:pt-24">
+  <Container>
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">{finalCta.title}</h2>
+      <p class="mx-auto mt-3 max-w-[52ch] text-base text-body">{finalCta.text}</p>
+      <div class="mt-8 flex justify-center">
+        <Button href={finalCta.cta.href}>{finalCta.cta.label}</Button>
+      </div>
+    </div>
+  </Container>
+</section>
