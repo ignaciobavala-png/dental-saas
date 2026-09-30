@@ -124,6 +124,19 @@ describe('idempotencia', () => {
     expect(first).toEqual({ ok: true, n: 1 });
     expect(second).toEqual({ ok: true, n: 1 });
   });
+
+  it('no bloquea la operación si la tabla de idempotencia no está disponible', async () => {
+    const fake = {
+      clinicId: 'cl_1',
+      scoped: async () => {
+        throw new Error('no such table: idempotency_keys');
+      },
+      insert: async () => ({}),
+    } as unknown as TenantDb;
+
+    const result = await idempotencyService.once(fake, 'k', async () => ({ ok: true }));
+    expect(result).toEqual({ ok: true });
+  });
 });
 
 describe('auditoría', () => {

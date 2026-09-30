@@ -1036,13 +1036,26 @@ export async function patientBundle(db: TenantDb, id: string) {
  */
 export const idempotencyService = {
   async once<T>(db: TenantDb, key: string, run: () => Promise<T>): Promise<T> {
-    const existing = await db.scoped<{ result_json: string | null }>({
-      sql: 'SELECT result_json FROM idempotency_keys WHERE clinic_id = ? AND key = ?',
-      args: [db.clinicId, key],
-    });
-    if (existing.length > 0) {
-      const raw = existing[0].result_json;
-      return raw ? (JSON.parse(raw) as T) : (undefined as T);
+    let cached: string | null | undefined;
+    try {
+      const existing = await db.scoped<{ result_json: string | null }>({
+        sql: 'SELECT result_json FROM idempotency_keys WHERE clinic_id = ? AND key = ?',
+        args: [db.clinicId, key],
+      });
+      cached = existing[0]?.result_json;
+    } catch {
+      // La tabla no está disponible (migración sin aplicar, D1 vieja, etc.).
+      // La idempotencia es una mejora, no un requisito: nunca bloqueamos la
+      // operación de negocio por no poder deduplicar.
+      return run();
+    }
+
+    if (cached !== undefined) {
+      try {
+        return cached ? (JSON.parse(cached) as T) : (undefined as T);
+      } catch {
+        return run();
+      }
     }
 
     const result = await run();
