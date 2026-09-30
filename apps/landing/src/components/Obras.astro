@@ -1,6 +1,5 @@
 ---
-import { getClinicData } from '../lib/clinic';
-const clinic = await getClinicData();
+const clinic = Astro.locals.clinic;
 ---
 {clinic.obrasSociales.length > 0 && (
 <section class="border-y border-line bg-surface">

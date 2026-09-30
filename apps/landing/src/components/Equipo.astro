@@ -1,6 +1,5 @@
 ---
-import { getClinicData } from '../lib/clinic';
-const clinic = await getClinicData();
+const clinic = Astro.locals.clinic;
 ---
 {clinic.team.length > 0 && (
 <section id="equipo" class="scroll-mt-20 bg-surface">
@@ -10,21 +9,20 @@ const clinic = await getClinicData();
         Quiénes te atienden
       </h2>
       <p class="mt-4 leading-relaxed text-muted">
-        Un equipo chico y estable: siempre te atiende la misma persona que conoce tu historia.
+        Conocé a los profesionales y sus áreas de atención.
       </p>
     </div>
 
     <div class="mt-12 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
       {clinic.team.map((p) => (
         <figure class="reveal">
-          <img
-            src={p.photo}
-            alt={`Retrato de ${p.name}`}
-            class="aspect-[4/5] w-full rounded-2xl object-cover"
-            width="720"
-            height="820"
-            loading="lazy"
-          />
+          {p.photo ? (
+            <img src={p.photo} alt={`Retrato de ${p.name}`} class="aspect-[4/5] w-full rounded-2xl object-cover" width="720" height="820" loading="lazy" />
+          ) : (
+            <div class="grid aspect-[4/5] place-items-center rounded-2xl bg-accent-soft font-display text-5xl font-semibold text-accent" aria-label={`Sin foto de ${p.name}`}>
+              {p.name.split(/\s+/).map((part) => part[0]).slice(0, 2).join('')}
+            </div>
+          )}
           <figcaption class="mt-4">
             <h3 class="font-display text-lg font-semibold text-ink">{p.name}</h3>
             <p class="text-sm text-muted">{p.role}</p>

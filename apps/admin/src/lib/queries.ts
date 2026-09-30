@@ -222,6 +222,7 @@ export function useAppointments(dayMs: number) {
     queryKey: ["appointments"],
     queryFn: async () => clampAppointments((await fetchAppointments()).map(toAppointment)),
     select: (list) => list.filter((a) => dateKey(a.startsAt) === dateKey(dayMs)),
+    refetchInterval: 30_000,
   });
 }
 
@@ -231,6 +232,7 @@ export function useWeekAppointments(startMs: number) {
     queryKey: ["appointments"],
     queryFn: async () => clampAppointments((await fetchAppointments()).map(toAppointment)),
     select: (list) => list.filter((a) => days.includes(dateKey(a.startsAt))),
+    refetchInterval: 30_000,
   });
 }
 
@@ -317,7 +319,11 @@ export function useWaitingList() {
 }
 
 export function useAiInquiries() {
-  return useQuery({ queryKey: ["ai-inquiries"], queryFn: async () => (await fetchInquiries()).map(toInquiry) });
+  return useQuery({
+    queryKey: ["ai-inquiries"],
+    queryFn: async () => (await fetchInquiries()).map(toInquiry),
+    refetchInterval: 30_000,
+  });
 }
 
 function toInquiry(d: { id: string; patient_name: string; topic: string; channel: string; at: number; status: string }): AiInquiry {
@@ -547,7 +553,11 @@ export function useLogin() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (input: { email: string; password: string }) => apiLogin(input.email, input.password),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["me"] }),
+    onSuccess: async () => {
+      await client.cancelQueries();
+      client.clear();
+      await client.fetchQuery({ queryKey: ["me"], queryFn: fetchMe });
+    },
   });
 }
 
@@ -555,7 +565,11 @@ export function useSignup() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: apiSignup,
-    onSuccess: () => client.invalidateQueries({ queryKey: ["me"] }),
+    onSuccess: async () => {
+      await client.cancelQueries();
+      client.clear();
+      await client.fetchQuery({ queryKey: ["me"], queryFn: fetchMe });
+    },
   });
 }
 
@@ -563,7 +577,11 @@ export function useLogout() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: apiLogout,
-    onSuccess: () => client.invalidateQueries({ queryKey: ["me"] }),
+    onSuccess: async () => {
+      await client.cancelQueries();
+      client.clear();
+      await client.fetchQuery({ queryKey: ["me"], queryFn: fetchMe });
+    },
   });
 }
 
@@ -577,6 +595,9 @@ export function useSaveClinicSettings() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: saveClinicSettings,
-    onSuccess: () => client.invalidateQueries({ queryKey: ["clinic-settings"] }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["clinic-settings"] });
+      client.invalidateQueries({ queryKey: ["settings"] });
+    },
   });
 }

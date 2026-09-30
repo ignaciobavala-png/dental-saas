@@ -107,6 +107,11 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 export function AppShell() {
   const navOpen = useUiStore((s) => s.navOpen);
   const setNavOpen = useUiStore((s) => s.setNavOpen);
+  const { data: me } = useMe();
+  const clinic = me?.memberships[0]?.clinic;
+  const trialDays = clinic?.trialExpiresAt
+    ? Math.max(0, Math.ceil((clinic.trialExpiresAt - Date.now()) / 86_400_000))
+    : null;
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -158,6 +163,13 @@ export function AppShell() {
         </header>
 
         <main className="mx-auto max-w-6xl px-4 py-6 lg:px-8">
+          {clinic?.status === "trial" && trialDays !== null ? (
+            <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+              <strong>Acceso piloto</strong>
+              <span className="ml-2">{trialDays === 0 ? "La prueba termina hoy." : `Quedan ${trialDays} ${trialDays === 1 ? "día" : "días"}.`}</span>
+              <span className="ml-1 text-amber-900/80">Contactanos para coordinar la continuidad.</span>
+            </div>
+          ) : null}
           <Outlet />
         </main>
       </div>

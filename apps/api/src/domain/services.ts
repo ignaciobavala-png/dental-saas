@@ -193,6 +193,8 @@ export const clinicService = {
   async updateContent(db: TenantDb, patch: Partial<ClinicContent>): Promise<ClinicContent> {
     const { content } = await getClinicSettings(db);
     const merged: ClinicContent = { ...content, ...patch };
+    if (merged.slotMinutes != null && (!Number.isInteger(merged.slotMinutes) || merged.slotMinutes < 5 || merged.slotMinutes > 240)) throw new Error('El intervalo debe estar entre 5 y 240 minutos.');
+    if (merged.openingHours?.some((h) => !Number.isInteger(h.weekday) || h.weekday < 0 || h.weekday > 6 || h.openMin < 0 || h.closeMin > 1440 || h.closeMin <= h.openMin)) throw new Error('Revisá los horarios de apertura y cierre.');
     await db.update('clinic_settings', db.clinicId, {
       content_json: JSON.stringify(merged),
       updated_at: Date.now(),
@@ -417,7 +419,7 @@ export const availabilityService = {
 
     const { row, content } = await getClinicSettings(db);
     const timezone = row?.timezone ?? 'America/Argentina/Buenos_Aires';
-    const slotMinutes = content.slotMinutes ?? 30;
+    const slotMinutes = Math.max(5, content.slotMinutes ?? 30);
     const openingHours = content.openingHours ?? [];
 
     const doctors = await catalogService.doctors(db);
@@ -449,7 +451,7 @@ export const availabilityService = {
           const startsAt = toEpoch(date, startMin, TZ_OFFSET_MIN);
           const endsAt = startsAt + service.duration_min * MS_MIN;
           const overlaps = taken.some((a) => startsAt < a.ends_at && endsAt > a.starts_at);
-          if (overlaps) continue;
+          if (overlaps || startsAt <= Date.now()) continue;
 
           found.push({
             doctorId: doctor.id,
@@ -465,6 +467,17 @@ export const availabilityService = {
     return found.slice(0, 40);
   },
 };
+
+async function assertOpeningHours(db: TenantDb, startsAt: number, duration: number) {
+  const { content } = await getClinicSettings(db);
+  const local = new Date(startsAt + TZ_OFFSET_MIN * MS_MIN);
+  const minute = local.getUTCHours() * 60 + local.getUTCMinutes();
+  const hours = content.openingHours?.find((h) => h.weekday === local.getUTCDay());
+  if (!hours || minute < hours.openMin || minute + duration > hours.closeMin ||
+      (minute - hours.openMin) % (content.slotMinutes ?? 30) !== 0 || local.getUTCSeconds() !== 0) {
+    throw new Error('Ese horario está fuera de la disponibilidad del consultorio. Consultá los horarios disponibles.');
+  }
+}
 
 export const bookingService = {
   async create(
@@ -492,7 +505,8 @@ export const bookingService = {
     }
 
     const startsAt = Date.parse(input.startsAt);
-    if (Number.isNaN(startsAt)) throw new Error('El horario no es una fecha válida.');
+    if (!Number.isFinite(startsAt) || startsAt <= Date.now()) throw new Error('Elegí un horario futuro válido.');
+    await assertOpeningHours(db, startsAt, service.duration_min);
     const endsAt = startsAt + service.duration_min * MS_MIN;
 
     const taken = await db.list<AppointmentRow>('appointments', {
@@ -628,7 +642,8 @@ export const bookingService = {
     }
 
     const startsAt = Date.parse(input.startsAt);
-    if (Number.isNaN(startsAt)) throw new Error('El horario no es una fecha válida.');
+    if (!Number.isFinite(startsAt) || startsAt <= Date.now()) throw new Error('Elegí un horario futuro válido.');
+    await assertOpeningHours(db, startsAt, service.duration_min);
     const endsAt = startsAt + service.duration_min * MS_MIN;
 
     const taken = await db.list<AppointmentRow>('appointments', {

@@ -1,0 +1,19 @@
+{
+  "name": "dental-landing",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-09-25",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist/client"
+  },
+  "services": [
+    {
+      "binding": "DENTAL_API",
+      "service": "dental-api"
+    }
+  ]
+}

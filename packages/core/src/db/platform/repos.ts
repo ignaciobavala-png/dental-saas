@@ -16,6 +16,7 @@ export type PlatformClinic = {
   db_strategy: "shared" | "dedicated";
   db_ref: string | null;
   created_at: number;
+  trial_expires_at: number | null;
 };
 
 export type PlatformMembership = {
@@ -94,6 +95,7 @@ export function clinicsRepo(d1: D1Database) {
         db_strategy: "shared",
         db_ref: null,
         created_at: Date.now(),
+        trial_expires_at: null,
       };
       await d1
         .prepare(
@@ -265,4 +267,3 @@ export function auditRepo(d1: D1Database) {
     },
   };
 }
-

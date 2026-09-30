@@ -25,14 +25,17 @@ que está acá es greenfield.
 | [10 — Seguridad](10-seguridad.md) | Sesiones, CSRF, secrets, rate limit, headers, auditoría |
 | [11 — Onboarding y provisioning](11-onboarding-provisioning.md) | Alta de consultorio, seed, publicación, invitaciones |
 | [12 — Deploy, dominios y costos](12-deploy-dominios-costos.md) | Recursos Cloudflare, entornos, dominios, límites, costos |
+| [14 — Producto y piloto](14-producto-y-piloto.md) | Estado para consultorios, PIN compartido y vencimiento de la prueba |
+| [16 — Auditoría y puesta en marcha](16-auditoria-y-puesta-en-marcha.md) | Checklist funcional actual, pruebas locales y pasos para publicar |
 
 ## Estado
 
-- **Fase:** diseño cerrado, listo para implementar.
-- **Repo:** solo `docs/`.
-- **Decisiones estructurales:** resueltas (ver `08`). Quedan abiertas A2–A10.
-- **Próximo paso:** `H0` (monorepo + fundaciones), con `F0` (dirección de arte) en
-  paralelo.
+- **Fase:** piloto funcional local.
+- **Repo:** monorepo TypeScript con API/Worker, panel React y landing Astro.
+- **Decisiones estructurales:** resueltas para piloto; quedan decisiones comerciales
+  antes de vender a escala.
+- **Próximo paso:** publicar en Cloudflare con D1 real y validar con un consultorio
+  piloto usando datos reales.
 
 ## Referencias de dominio
 

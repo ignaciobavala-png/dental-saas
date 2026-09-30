@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, Mic, RefreshCw, Send, Sparkles, Volume2, X } from "lucide-react";
 import { EmptyState, Segmented, cn } from "./ui";
 import { useUiStore } from "../store/ui";
@@ -17,6 +18,7 @@ const SUGGESTIONS = [
 type Tab = "chat" | "turnos";
 
 export function AssistantDock() {
+  const queryClient = useQueryClient();
   const open = useUiStore((s) => s.assistantOpen);
   const setOpen = useUiStore((s) => s.setAssistantOpen);
   const toggle = useUiStore((s) => s.toggleAssistant);
@@ -110,9 +112,12 @@ export function AssistantDock() {
         copy[copy.length - 1] = { role: "assistant", content: final };
         return copy;
       });
+      void queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      void queryClient.invalidateQueries({ queryKey: ["patients"] });
+      void queryClient.invalidateQueries({ queryKey: ["ai-inquiries"] });
       void refreshAppointments();
     },
-    [busy, refreshAppointments],
+    [busy, queryClient, refreshAppointments],
   );
 
   return (
@@ -192,7 +197,7 @@ export function AssistantDock() {
                             : "rounded-bl-md bg-soft text-ink ring-1 ring-line",
                         )}
                       >
-                        {message.content || (busy ? <TypingDots /> : "")}
+                        {message.content ? <ChatText text={message.content} /> : (busy ? <TypingDots /> : "")}
                       </div>
                       {message.role === "assistant" && message.content && ttsSupported ? (
                         <button
@@ -332,4 +337,8 @@ function TypingDots() {
       <span className="size-1.5 animate-bounce rounded-full bg-muted" />
     </span>
   );
+}
+
+function ChatText({ text }: { text: string }) {
+  return <>{text.split(/(\*\*[^*]+\*\*)/g).map((part, i) => part.startsWith('**') && part.endsWith('**') ? <strong key={i}>{part.slice(2, -2)}</strong> : part)}</>;
 }

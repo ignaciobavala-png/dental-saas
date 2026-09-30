@@ -5,6 +5,7 @@ export class ApiError extends Error {}
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     credentials: "include",
+    cache: "no-store",
     headers: { "Content-Type": "application/json" },
     ...init,
   });
@@ -22,7 +23,7 @@ export type Membership = {
   clinic_id: string;
   role: "owner" | "admin" | "dentist" | "receptionist";
   status: string;
-  clinic: { id: string; name: string; slug: string } | null;
+  clinic: { id: string; name: string; slug: string; status?: string; publicUrl?: string | null; trialExpiresAt?: number | null } | null;
 };
 
 export async function fetchMe(): Promise<{ user: SessionUser | null; memberships: Membership[] }> {
@@ -38,6 +39,7 @@ export async function signup(input: {
   email: string;
   password: string;
   clinicName: string;
+  trialPin?: string;
 }): Promise<{ user: SessionUser; clinic: { id: string; slug: string; name: string } }> {
   return request("/api/auth/signup", { method: "POST", body: JSON.stringify(input) });
 }

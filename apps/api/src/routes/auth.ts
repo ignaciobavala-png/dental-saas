@@ -4,13 +4,10 @@ import { z } from 'zod';
 import {
   clinicsRepo,
   createSession,
-  createTenantContext,
   destroySessionToken,
-  domainsRepo,
   hashPassword,
   membershipsRepo,
   SESSION_COOKIE,
-  TenantDb,
   usersRepo,
   verifyPassword,
 } from '@dental/core';
@@ -29,13 +26,14 @@ const SEED_SERVICES = [
 
 const signupSchema = z.object({
   name: z.string().min(1),
-  email: z.string().email(),
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8),
   clinicName: z.string().min(1),
+  trialPin: z.string().optional(),
 });
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(1),
 });
 
@@ -58,7 +56,10 @@ async function setSessionCookie(c: import('hono').Context<AppBindings>, token: s
 auth.post('/signup', async (c) => {
   const parsed = signupSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: 'Datos inválidos.' }, 400);
-  const { name, email, password, clinicName } = parsed.data;
+  const { name, email, password, clinicName, trialPin } = parsed.data;
+  if (!c.env.TRIAL_PIN || trialPin !== c.env.TRIAL_PIN) {
+    return c.json({ error: 'El PIN de acceso no es válido.' }, 403);
+  }
 
   const users = usersRepo(c.env.DB);
   if (await users.byEmail(email)) {
@@ -69,57 +70,33 @@ auth.post('/signup', async (c) => {
   const slug = await uniqueSlug(clinicName, async (candidate) => Boolean(await clinics.bySlug(candidate)));
 
   const passwordHash = await hashPassword(password);
-  const user = await users.create({ email, passwordHash, name });
-  const clinic = await clinics.create({ name: clinicName, slug });
-  await membershipsRepo(c.env.DB).create({ userId: user.id, clinicId: clinic.id, role: 'owner' });
-  await domainsRepo(c.env.DB).create({
-    hostname: `${slug}.nuestrosaas.com`,
-    clinicId: clinic.id,
-    kind: 'subdomain',
-  });
-
-  const ctx = createTenantContext({ clinicId: clinic.id, userId: user.id, role: 'owner' });
-  const db = new TenantDb(ctx, c.env.DB);
-
-  await db.insert('clinic_settings', {
-    timezone: 'America/Argentina/Buenos_Aires',
-    locale: 'es-AR',
-    contact_json: null,
-    theme_json: null,
-    content_json: JSON.stringify({
-      name: clinicName,
-      openingHours: [
-        { weekday: 1, openMin: 540, closeMin: 1140 },
-        { weekday: 2, openMin: 540, closeMin: 1140 },
-        { weekday: 3, openMin: 540, closeMin: 1140 },
-        { weekday: 4, openMin: 540, closeMin: 1140 },
-        { weekday: 5, openMin: 540, closeMin: 1140 },
-      ],
-      slotMinutes: 30,
-      obrasSociales: [],
-      faqs: [],
-      testimonials: [],
-    }),
-    updated_at: Date.now(),
-  });
-
-  for (const service of SEED_SERVICES) {
-    await db.insert('services', {
-      code: null,
-      name: service.name,
-      description: null,
-      duration_min: service.duration_min,
-      price_cents: null,
-      color: service.color,
-      active: 1,
-      created_at: Date.now(),
-    });
+  const user = { id: crypto.randomUUID(), name, email };
+  const clinic = { id: crypto.randomUUID(), name: clinicName, slug };
+  const now = Date.now();
+  const trialExpiresAt = now + (c.env.TRIAL_DAYS === '7' ? 7 : 14) * 86_400_000;
+  const content = {
+    name: clinicName,
+    openingHours: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, openMin: 540, closeMin: 1140 })),
+    slotMinutes: 30, obrasSociales: [], faqs: [], testimonials: [],
+  };
+  // D1 batch is transactional: a failed provision cannot leave a half-created account.
+  try {
+    await c.env.DB.batch([
+      c.env.DB.prepare("INSERT INTO users (id,email,password_hash,name,status,created_at) VALUES (?,?,?,?,'active',?)").bind(user.id,email,passwordHash,name,now),
+      c.env.DB.prepare("INSERT INTO clinics (id,name,slug,status,created_at,trial_expires_at) VALUES (?,?,?,'trial',?,?)").bind(clinic.id,clinicName,slug,now,trialExpiresAt),
+      c.env.DB.prepare("INSERT INTO memberships (id,user_id,clinic_id,role,status,created_at) VALUES (?,?,?,'owner','active',?)").bind(crypto.randomUUID(),user.id,clinic.id,now),
+      c.env.DB.prepare("INSERT INTO clinic_settings (clinic_id,content_json,updated_at) VALUES (?,?,?)").bind(clinic.id,JSON.stringify(content),now),
+      ...SEED_SERVICES.map((service) => c.env.DB.prepare("INSERT INTO services (id,clinic_id,name,duration_min,color,active,created_at) VALUES (?,?,?,?,?,1,?)").bind(crypto.randomUUID(),clinic.id,service.name,service.duration_min,service.color,now)),
+    ]);
+  } catch (error) {
+    if (String(error).includes('UNIQUE')) return c.json({ error: 'Ese email o nombre de consultorio ya está en uso. Intentá nuevamente.' }, 409);
+    throw error;
   }
 
   const { token } = await createSession(c.env.DB, user.id);
   await setSessionCookie(c, token);
 
-  return c.json({ user: { id: user.id, name: user.name, email: user.email }, clinic: { id: clinic.id, slug: clinic.slug, name: clinic.name } });
+  return c.json({ user: { id: user.id, name: user.name, email: user.email }, clinic: { id: clinic.id, slug: clinic.slug, name: clinic.name, trialExpiresAt } });
 });
 
 auth.post('/login', async (c) => {
@@ -127,7 +104,7 @@ auth.post('/login', async (c) => {
   if (!parsed.success) return c.json({ error: 'Datos inválidos.' }, 400);
 
   const user = await usersRepo(c.env.DB).byEmail(parsed.data.email);
-  if (!user?.password_hash || !(await verifyPassword(parsed.data.password, user.password_hash))) {
+  if (user?.status !== 'active' || !user?.password_hash || !(await verifyPassword(parsed.data.password, user.password_hash))) {
     return c.json({ error: 'Email o contraseña incorrectos.' }, 401);
   }
 
@@ -149,7 +126,10 @@ auth.get('/me', async (c) => {
   const memberships = await membershipsRepo(c.env.DB).listByUser(user.id);
   const clinics = clinicsRepo(c.env.DB);
   const withClinic = await Promise.all(
-    memberships.map(async (m) => ({ ...m, clinic: await clinics.byId(m.clinic_id) })),
+    memberships.map(async (m) => {
+      const clinic = await clinics.byId(m.clinic_id);
+      return { ...m, clinic: clinic ? { ...clinic, trialExpiresAt: clinic.trial_expires_at, publicUrl: c.env.PUBLIC_LANDING_URL ? `${c.env.PUBLIC_LANDING_URL.replace(/\/$/, '')}/c/${clinic.slug}` : null } : null };
+    }),
   );
   return c.json({
     user: { id: user.id, name: user.name, email: user.email },

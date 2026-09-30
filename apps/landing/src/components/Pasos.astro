@@ -3,7 +3,7 @@ const steps = [
   {
     n: '01',
     title: 'Escribí tu consulta',
-    detail: 'Contanos qué necesitás desde el chat o por WhatsApp. Si es urgente, te orientamos enseguida.',
+    detail: 'Contanos qué necesitás desde el chat o escribinos por WhatsApp.',
   },
   {
     n: '02',
@@ -12,8 +12,8 @@ const steps = [
   },
   {
     n: '03',
-    title: 'Queda confirmado',
-    detail: 'El turno se agenda solo y te lo confirmamos al instante. No hace falta que llames.',
+    title: 'El consultorio lo revisa',
+    detail: 'Tu solicitud queda registrada y el equipo del consultorio la confirma con tus datos de contacto.',
   },
 ];
 ---
@@ -24,14 +24,14 @@ const steps = [
         Pedir turno es así de simple
       </h2>
       <p class="mt-4 leading-relaxed text-muted">
-        Sin formularios eternos ni esperar a que atiendan el teléfono.
+        Sin formularios eternos. Dejás tu consulta y el consultorio la puede seguir desde su agenda.
       </p>
     </div>
 
     <ol class="reveal mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-6">
       {steps.map((s) => (
-        <li class="border-t border-line pt-6">
-          <span class="font-display text-sm font-semibold tracking-wide text-accent">{s.n}</span>
+        <li class="border-t-2 border-accent-soft pt-6">
+          <span class="inline-grid size-10 place-items-center rounded-full bg-accent-soft font-display text-sm font-semibold text-accent">{s.n}</span>
           <h3 class="mt-3 font-display text-xl font-semibold text-ink">{s.title}</h3>
           <p class="mt-2 leading-relaxed text-muted">{s.detail}</p>
         </li>
@@ -39,7 +39,7 @@ const steps = [
     </ol>
 
     <a href="#chat-secretaria" class="mt-10 inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline">
-      Probar la secretaría ahora <span aria-hidden="true">→</span>
+      Pedir un turno <span aria-hidden="true">→</span>
     </a>
   </div>
 </section>

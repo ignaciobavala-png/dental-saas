@@ -1,11 +1,17 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryCache, MutationCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./router";
 import "./styles.css";
+import { RequestErrors, showRequestError } from "./components/RequestErrors";
+
+// Remove the historical PWA API cache, which must never hold clinical data.
+if ("caches" in window) void caches.delete("api");
 
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: showRequestError }),
+  mutationCache: new MutationCache({ onError: showRequestError }),
   defaultOptions: {
     queries: {
       staleTime: 30_000,
@@ -21,6 +27,7 @@ createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
+      <RequestErrors />
     </QueryClientProvider>
   </StrictMode>,
 );

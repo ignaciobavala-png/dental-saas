@@ -15,8 +15,9 @@ export async function resolveTenantContext(
   if (memberships.length === 0) return null;
 
   const requested = c.req.query('clinic');
-  const membership = requested ? memberships.find((m) => m.clinic_id === requested) ?? memberships[0] : memberships[0];
+  const membership = requested ? memberships.find((m) => m.clinic_id === requested) : memberships[0];
 
+  if (!membership || membership.status !== "active") return null;
   return createTenantContext({ clinicId: membership.clinic_id, userId: user.id, role: membership.role });
 }
 

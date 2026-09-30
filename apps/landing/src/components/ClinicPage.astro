@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+import Nav from './Nav.astro';
+import Hero from './Hero.astro';
+import Obras from './Obras.astro';
+import Tratamientos from './Tratamientos.astro';
+import Pasos from './Pasos.astro';
+import Equipo from './Equipo.astro';
+import Secretaria from './Secretaria.astro';
+import Opiniones from './Opiniones.astro';
+import Ubicacion from './Ubicacion.astro';
+import Faq from './Faq.astro';
+import Cta from './Cta.astro';
+import Footer from './Footer.astro';
+
+const clinic = Astro.locals.clinic;
+---
+<Base
+  title={`${clinic.name} | Odontología`}
+  description="Consultorio odontológico. Turnos online, obras sociales y tratamientos de odontología general, ortodoncia, implantes y estética dental."
+>
+  <Nav />
+  <main>
+    <Hero />
+    <Obras />
+    <Tratamientos />
+    <Pasos />
+    <Equipo />
+    <Secretaria />
+    <Opiniones />
+    <Ubicacion />
+    <Faq />
+    <Cta />
+  </main>
+  <Footer />
+</Base>

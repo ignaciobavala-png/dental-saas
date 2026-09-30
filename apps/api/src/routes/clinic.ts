@@ -12,9 +12,9 @@ const contentSchema = z.object({
   whatsapp: z.string().optional(),
   email: z.string().optional(),
   openingHours: z
-    .array(z.object({ weekday: z.number().int().min(0).max(6), openMin: z.number().int(), closeMin: z.number().int() }))
+    .array(z.object({ weekday: z.number().int().min(0).max(6), openMin: z.number().int().min(0).max(1439), closeMin: z.number().int().min(1).max(1440) }).refine((h) => h.closeMin > h.openMin))
     .optional(),
-  slotMinutes: z.number().int().positive().optional(),
+  slotMinutes: z.number().int().min(5).max(240).optional(),
   obrasSociales: z.array(z.string()).optional(),
   faqs: z.array(z.object({ q: z.string(), a: z.string() })).optional(),
   testimonials: z.array(z.object({ name: z.string(), text: z.string() })).optional(),

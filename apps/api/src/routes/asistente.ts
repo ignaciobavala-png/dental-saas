@@ -16,10 +16,10 @@ const bodySchema = z.object({
     .array(
       z.strictObject({
         role: z.enum(['user', 'assistant']),
-        content: z.string().min(1),
+        content: z.string().min(1).max(8000),
       }),
     )
-    .min(1),
+    .min(1).max(40),
 });
 
 /**
@@ -58,12 +58,14 @@ asistente.post('/chat', async (c) => {
       system: await buildInternalSystemPrompt(db, user.name),
       messages: parsed.data.messages,
       tools: buildStaffTools(ctx, db, auditFor(c.env.DB, ctx)),
+      maxOutputTokens: 2000,
       stopWhen: stepCountIs(8),
       providerOptions: { deepseek: { thinking: { type: 'disabled' } } },
     });
 
     return result.toTextStreamResponse();
   } catch (error) {
-    return c.json({ error: (error as Error).message }, 500);
+    console.error('Asistente no disponible', error instanceof Error ? error.name : 'unknown');
+    return c.json({ error: 'El asistente no está disponible. Intentá nuevamente.' }, 503);
   }
 });

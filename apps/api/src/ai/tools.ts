@@ -36,8 +36,8 @@ export const createAppointmentInput = z.strictObject({
   startsAt: z.string().describe('ISO 8601, exactamente el que devolvió get_available_slots'),
   patient: z.strictObject({
     fullName: z.string().min(1),
-    phone: z.string().optional(),
-    email: z.string().optional(),
+    phone: z.string().optional().describe('Teléfono de contacto. Necesario si no hay email.'),
+    email: z.string().optional().describe('Email de contacto. Necesario si no hay teléfono.'),
   }),
 });
 
@@ -258,10 +258,14 @@ export function buildPublicTools(ctx: TenantContext, db: TenantDb): ToolSet {
       inputSchema: createAppointmentInput,
       execute: async (input) => {
         try {
+          if (!input.patient.phone?.trim() && !input.patient.email?.trim()) {
+            return { ok: false, error: 'Pedí un teléfono o email de contacto antes de registrar el turno.' };
+          }
           const appointment = await bookingService.create(db, {
             serviceId: input.serviceId,
             doctorId: input.doctorId,
             startsAt: input.startsAt,
+            source: 'landing',
             patientName: input.patient.fullName,
             phone: input.patient.phone,
             email: input.patient.email,

@@ -8,7 +8,8 @@ export async function getSessionUser(c: Context<AppBindings>): Promise<PlatformU
   if (!token) return null;
   const session = await verifySessionToken(c.env.DB, token);
   if (!session) return null;
-  return usersRepo(c.env.DB).byId(session.user_id);
+  const user = await usersRepo(c.env.DB).byId(session.user_id);
+  return user?.status === 'active' ? user : null;
 }
 
 export async function requireAuth(c: Context<AppBindings>, next: () => Promise<void>): Promise<Response | void> {

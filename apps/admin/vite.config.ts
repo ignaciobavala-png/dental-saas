@@ -24,13 +24,7 @@ export default defineConfig({
       },
       workbox: {
         navigateFallbackDenylist: [/^\/api\//],
-        runtimeCaching: [
-          {
-            urlPattern: /\/api\//,
-            handler: "NetworkFirst",
-            options: { cacheName: "api", networkTimeoutSeconds: 8 },
-          },
-        ],
+
       },
     }),
   ],

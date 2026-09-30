@@ -1,6 +1,5 @@
 ---
-import { getClinicData } from '../lib/clinic';
-const clinic = await getClinicData();
+const clinic = Astro.locals.clinic;
 const year = new Date().getFullYear();
 ---
 <footer class="border-t border-line">

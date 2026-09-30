@@ -1,5 +1,4 @@
 import type { PublicClinic } from '@dental/contracts';
-import { fallbackClinic } from '../data/clinic';
 
 export type ClinicHours = { day: string; time: string };
 export type ClinicTreatment = { name: string; detail: string; duration: string; price: string };
@@ -30,9 +29,6 @@ export type ClinicData = {
 };
 
 const WEEKDAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-
-const API_URL = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8787';
-const CLINIC_SLUG = import.meta.env.PUBLIC_CLINIC_SLUG ?? '';
 
 function telHref(phone: string | null): string {
   if (!phone) return '';
@@ -119,7 +115,7 @@ export function toClinicData(payload: PublicClinic): ClinicData {
       name: d.name,
       role: d.specialty ?? 'Odontología',
       license: d.bio ?? '',
-      photo: d.photoUrl ?? `https://picsum.photos/seed/${d.id}/720/820`,
+      photo: d.photoUrl ?? '',
     })),
     testimonials: payload.testimonials.map((t) => ({
       quote: t.text,
@@ -130,36 +126,3 @@ export function toClinicData(payload: PublicClinic): ClinicData {
   };
 }
 
-let cache: Promise<ClinicData> | null = null;
-
-/**
- * Datos de la clínica para la landing. Una sola vez por render/build: el
- * resultado (o el fallback) se cachea a nivel de módulo y todos los
- * componentes comparten la misma promesa.
- *
- * Si `PUBLIC_CLINIC_SLUG` está vacío o la API no responde, cae al fixture local
- * (`data/clinic.ts`) para que el build nunca se rompa por falta de backend.
- */
-export function getClinicData(): Promise<ClinicData> {
-  cache ??= load();
-  return cache;
-}
-
-async function load(): Promise<ClinicData> {
-  if (!CLINIC_SLUG) {
-    console.warn('[landing] PUBLIC_CLINIC_SLUG vacío; uso el fixture local.');
-    return fallbackClinic;
-  }
-
-  try {
-    const res = await fetch(`${API_URL}/api/public/clinic/${encodeURIComponent(CLINIC_SLUG)}`);
-    if (!res.ok) throw new Error(`la API respondió ${res.status}`);
-    return toClinicData((await res.json()) as PublicClinic);
-  } catch (error) {
-    console.warn(
-      `[landing] no pude cargar la clínica "${CLINIC_SLUG}" desde ${API_URL} ` +
-        `(${error instanceof Error ? error.message : error}); uso el fixture local.`,
-    );
-    return fallbackClinic;
-  }
-}

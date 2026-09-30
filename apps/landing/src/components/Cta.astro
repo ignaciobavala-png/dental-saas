@@ -1,29 +1,26 @@
 ---
-import { getClinicData } from '../lib/clinic';
-const clinic = await getClinicData();
+const clinic = Astro.locals.clinic;
 ---
-<section id="reservar" class="scroll-mt-20 bg-accent text-bone">
+<section id="reservar" class="scroll-mt-20 bg-accent-soft text-ink">
   <div class="mx-auto flex max-w-6xl flex-col items-start gap-8 px-5 py-16 md:flex-row md:items-center md:justify-between md:px-8 md:py-24">
     <div class="max-w-xl">
-      <h2 class="font-display text-3xl font-semibold tracking-tight text-bone md:text-4xl">
-        Reservá tu turno hoy
+      <h2 class="font-display text-3xl font-semibold tracking-tight text-ink md:text-4xl">
+        Dejá tu solicitud de turno
       </h2>
-      <p class="mt-4 leading-relaxed text-bone/75">
-        Elegís el día y el horario que te quede cómodo. Te confirmamos al instante.
+      <p class="mt-4 leading-relaxed text-muted">
+        Consultá disponibilidad y compartí tus datos para que el consultorio pueda confirmar tu visita.
       </p>
     </div>
     <div class="flex flex-col items-start gap-3">
       <a
-        href={clinic.whatsapp}
-        target="_blank"
-        rel="noopener"
-        class="rounded-full bg-bone px-6 py-3.5 text-sm font-medium text-accent transition-transform hover:-translate-y-0.5 active:translate-y-px"
+        href={clinic.whatsapp || '#chat-secretaria'}
+        target={clinic.whatsapp ? '_blank' : undefined}
+        rel={clinic.whatsapp ? 'noopener' : undefined}
+        class="clinic-button"
       >
-        Reservar turno
+        Solicitar un turno
       </a>
-      <p class="text-sm text-bone/70">
-        o llamanos al <a href={clinic.phoneHref} class="underline underline-offset-2 hover:text-bone">{clinic.phone}</a>
-      </p>
+      {clinic.phone && <p class="text-sm text-muted">o llamanos al <a href={clinic.phoneHref} class="underline underline-offset-2 hover:text-ink">{clinic.phone}</a></p>}
     </div>
   </div>
 </section>

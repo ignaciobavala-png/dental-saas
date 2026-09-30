@@ -1,5 +1,4 @@
 ---
-import { getClinicData } from '../lib/clinic';
 import FloatingCta from '../components/FloatingCta.astro';
 import '../styles/global.css';
 
@@ -8,7 +7,7 @@ interface Props {
   description: string;
 }
 const { title, description } = Astro.props;
-const clinic = await getClinicData();
+const clinic = Astro.locals.clinic;
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : Astro.url.href;
 
 const SCHEMA_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -23,7 +22,6 @@ const jsonLd = {
   ...(clinic.phone ? { telephone: clinic.phone } : {}),
   ...(clinic.email ? { email: clinic.email } : {}),
   url: canonical,
-  priceRange: '$$',
   ...(clinic.address
     ? { address: { '@type': 'PostalAddress', streetAddress: clinic.address, addressCountry: 'AR' } }
     : {}),
@@ -43,7 +41,7 @@ const jsonLd = {
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <meta name="theme-color" content="#17493e" />
+    <meta name="theme-color" content="#17634e" />
     <link rel="icon" href="data:," />
 
     <meta property="og:type" content="website" />
@@ -83,7 +81,7 @@ const jsonLd = {
       });
     </script>
 
-    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replaceAll("<", "\\u003c")} />
   </head>
   <body>
     <slot />

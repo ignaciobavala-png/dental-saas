@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, KeyRound, ShieldCheck } from "lucide-react";
 import { Button, cn } from "../components/ui";
 import { useLogin, useSignup } from "../lib/queries";
 
@@ -27,6 +27,7 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [clinicName, setClinicName] = useState("");
+  const [trialPin, setTrialPin] = useState("");
   const navigate = useNavigate();
 
   const login = useLogin();
@@ -40,7 +41,7 @@ export function Login() {
       if (mode === "login") {
         await login.mutateAsync({ email, password });
       } else {
-        await signup.mutateAsync({ name, email, password, clinicName });
+        await signup.mutateAsync({ name, email, password, clinicName, trialPin: trialPin || undefined });
       }
       navigate("/", { replace: true });
     } catch {
@@ -49,15 +50,40 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <span className="mx-auto mb-3 grid size-11 place-items-center rounded-xl bg-accent text-lg font-bold text-white">
-            E
-          </span>
-          <h1 className="font-display text-xl font-bold tracking-tight">Evolución Dental</h1>
-          <p className="mt-1 text-sm text-muted">
-            {mode === "login" ? "Entrá al panel de tu consultorio" : "Creá tu cuenta y tu consultorio"}
+    <div className="min-h-screen bg-canvas px-4 py-8 sm:px-6 lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(25rem,31rem)] lg:items-center lg:gap-12 lg:px-12">
+      <section className="mx-auto mb-8 max-w-xl lg:mb-0">
+        <span className="mb-5 grid size-12 place-items-center rounded-2xl bg-accent font-display text-xl font-bold text-white">E</span>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Evolución Dental</p>
+        <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-ink sm:text-5xl">
+          El panel operativo del consultorio.
+        </h1>
+        <p className="mt-5 max-w-lg text-base leading-relaxed text-muted">
+          Agenda, pacientes, landing pública y recepción virtual en un solo lugar. El primer acceso se activa con un PIN y después se entra con email y contraseña.
+        </p>
+        <div className="mt-8 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-line bg-panel p-4">
+            <KeyRound size={18} className="text-accent" />
+            <p className="mt-3 text-sm font-semibold text-ink">Activación con PIN</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted">Usalo una vez para crear el consultorio de prueba.</p>
+          </div>
+          <div className="rounded-xl border border-line bg-panel p-4">
+            <ShieldCheck size={18} className="text-accent" />
+            <p className="mt-3 text-sm font-semibold text-ink">Acceso privado</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted">Luego cada usuario entra con su propio email.</p>
+          </div>
+        </div>
+      </section>
+
+      <div className="mx-auto w-full max-w-md rounded-2xl border border-line bg-panel p-6 shadow-[0_18px_60px_rgba(40,35,25,0.08)] sm:p-8">
+        <div className="mb-7 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Evolución Dental</p>
+          <h1 className="mt-2 font-display text-2xl font-bold tracking-tight">
+            {mode === "login" ? "Entrá al panel del consultorio" : "Activá un consultorio"}
+          </h1>
+          <p className="mt-2 text-sm text-muted">
+            {mode === "login"
+              ? "Usá el email y contraseña que creaste al activar la prueba."
+              : "El PIN habilita la prueba. Después vas a entrar con tu email y contraseña."}
           </p>
         </div>
 
@@ -103,6 +129,17 @@ export function Login() {
                 required
                 placeholder="Ej. Odontología Arocena"
               />
+              <Field
+                label="PIN de activación de la prueba"
+                required
+                value={trialPin}
+                onChange={(e) => setTrialPin(e.target.value)}
+                autoComplete="one-time-code"
+                placeholder="Ej. adminadmin"
+              />
+              <p className="rounded-lg bg-soft px-3 py-2 text-xs leading-relaxed text-muted">
+                El acceso de prueba empieza al crear la cuenta. No pedimos datos de pago.
+              </p>
             </>
           ) : null}
           <Field

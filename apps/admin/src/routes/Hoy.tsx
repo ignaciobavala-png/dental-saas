@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BadgeCheck, CalendarPlus, Clock, Sparkles, UserPlus } from "lucide-react";
+import { ArrowRight, BadgeCheck, CalendarPlus, CheckCircle2, Clock, ExternalLink, Sparkles, UserPlus } from "lucide-react";
 import { Avatar, Button, Card, EmptyState, Loading, PageHeader, StatusPill, ToneChip } from "../components/ui";
 import { AppointmentForm, Modal, PatientForm } from "../components/forms";
 import {
+  useSettings,
+  useMe,
   useAiInquiries,
   useAppointments,
   useCreateAppointment,
@@ -43,6 +45,8 @@ function Stat({
 
 export function Hoy() {
   const today = startOfToday();
+  const settings = useSettings();
+  const me = useMe();
   const summary = useDaySummary(today);
   const appts = useAppointments(today);
   const doctors = useDoctors();
@@ -65,6 +69,26 @@ export function Hoy() {
   const upcomingFallback = upcoming.length
     ? upcoming
     : (appts.data ?? []).filter((a) => a.kind === "patient").slice(0, 6);
+  const clinic = me.data?.memberships[0]?.clinic;
+  const setupItems = [
+    {
+      label: "Profesionales con tratamientos",
+      done: Boolean(doctors.data?.some((d) => d.active && d.serviceIds.length)),
+      to: "profesionales",
+    },
+    {
+      label: "Tratamientos activos",
+      done: Boolean(services.data?.some((s) => s.active)),
+      to: "tratamientos",
+    },
+    {
+      label: "Contacto, dirección y horarios",
+      done: Boolean(settings.data?.contact.address && (settings.data.contact.phone || settings.data.contact.whatsapp) && settings.data.openingHours.length),
+      to: "landing",
+    },
+  ];
+  const pendingAppointments = (appts.data ?? []).filter((a) => a.kind === "patient" && a.status === "pending").length;
+  const newInquiries = (inquiries.data ?? []).filter((i) => i.status === "new").length;
 
   return (
     <div>
@@ -83,6 +107,56 @@ export function Hoy() {
         }
       />
 
+      <section className="mb-6 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+        <Card className="p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Centro de control</p>
+              <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">Lo que requiere atención</h2>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                Revisá solicitudes nuevas y dejá lista la información que usa la recepción virtual.
+              </p>
+            </div>
+            {clinic?.publicUrl ? (
+              <a className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-line px-3.5 text-sm font-semibold text-ink hover:bg-soft" href={clinic.publicUrl} target="_blank" rel="noreferrer">
+                Web pública <ExternalLink size={15} />
+              </a>
+            ) : null}
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <Link to="/agenda" className="rounded-xl border border-line bg-soft p-4 transition-colors hover:bg-card">
+              <p className="text-2xl font-bold tabular-nums text-ink">{pendingAppointments}</p>
+              <p className="mt-1 text-sm font-medium text-ink">Turnos por confirmar</p>
+              <p className="mt-1 text-xs text-muted">Llegan desde la web o la recepción IA.</p>
+            </Link>
+            <div className="rounded-xl border border-line bg-soft p-4">
+              <p className="text-2xl font-bold tabular-nums text-ink">{newInquiries}</p>
+              <p className="mt-1 text-sm font-medium text-ink">Consultas nuevas</p>
+              <p className="mt-1 text-xs text-muted">Preguntas que todavía necesitan seguimiento.</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="font-semibold">Preparación para compartir la web</h2>
+          <p className="mt-2 text-sm text-muted">La recepción virtual responde con estos datos.</p>
+          <ul className="mt-4 space-y-3 text-sm">
+            {setupItems.map((item) => (
+              <li key={item.label}>
+                <Link className="flex items-center gap-2 text-ink hover:text-accent" to={item.to}>
+                  <CheckCircle2 size={16} className={item.done ? "text-accent" : "text-muted"} />
+                  <span className={item.done ? "" : "font-medium"}>{item.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 rounded-lg bg-soft px-3 py-2 text-xs leading-relaxed text-muted">
+            Los turnos pedidos desde la web quedan pendientes hasta que el consultorio los confirme.
+          </p>
+        </Card>
+      </section>
+
       {summary.isLoading ? (
         <Loading />
       ) : (
@@ -99,9 +173,9 @@ export function Hoy() {
             tone="#f59e0b"
           />
           <Stat
-            label="Facturado"
+            label="Valor atendido"
             value={formatMoney(summary.data?.billedCents ?? 0)}
-            hint={`Agenda del día: ${formatMoney(summary.data?.scheduledCents ?? 0)}`}
+            hint={`Estimado · Agenda: ${formatMoney(summary.data?.scheduledCents ?? 0)}`}
             tone="#3b82f6"
           />
           <Stat

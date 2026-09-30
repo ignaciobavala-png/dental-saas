@@ -13,10 +13,10 @@ const bodySchema = z.object({
     .array(
       z.strictObject({
         role: z.enum(['user', 'assistant']),
-        content: z.string().min(1),
+        content: z.string().min(1).max(4000),
       }),
     )
-    .min(1),
+    .min(1).max(40),
 });
 
 export const secretaria = new Hono<AppBindings>();
@@ -32,7 +32,7 @@ async function resolvePublicContext(c: import('hono').Context<AppBindings>): Pro
   const slug = c.req.query('clinic');
   if (!slug) return null;
   const clinic = await clinicsRepo(c.env.DB).bySlug(slug);
-  if (!clinic) return null;
+  if (!clinic || clinic.status === 'suspended' || (clinic.status === 'trial' && clinic.trial_expires_at != null && clinic.trial_expires_at <= Date.now())) return null;
   return createTenantContext({ clinicId: clinic.id, userId: null, role: 'visitor' });
 }
 
@@ -76,12 +76,14 @@ secretaria.post('/chat', async (c) => {
       system: await buildPublicSystemPrompt(db),
       messages: parsed.data.messages,
       tools: buildPublicTools(ctx, db),
+      maxOutputTokens: 1200,
       stopWhen: stepCountIs(5),
       providerOptions: { deepseek: { thinking: { type: 'disabled' } } },
     });
 
     return result.toTextStreamResponse();
   } catch (error) {
-    return c.json({ error: (error as Error).message }, 500);
+    console.error('Secretaría no disponible', error instanceof Error ? error.name : 'unknown');
+    return c.json({ error: 'La asistente no está disponible. Contactá al consultorio.' }, 503);
   }
 });

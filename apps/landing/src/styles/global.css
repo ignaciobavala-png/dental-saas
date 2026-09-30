@@ -2,14 +2,14 @@
 
 @theme {
   /* Neutros cálidos (una sola familia de grises) + un único acento profundo. */
-  --color-bone: #f3efe7;
-  --color-surface: #fbf9f5;
-  --color-ink: #1b1916;
-  --color-muted: #6c6559;
-  --color-line: #e3ddd1;
-  --color-accent: #17493e;
-  --color-accent-hover: #103a31;
-  --color-accent-soft: #d9e4de;
+  --color-bone: #f5faf7;
+  --color-surface: #ffffff;
+  --color-ink: #173f37;
+  --color-muted: #536e65;
+  --color-line: #d5e5dc;
+  --color-accent: #17634e;
+  --color-accent-hover: #104c3c;
+  --color-accent-soft: #dcefe4;
 
   --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
@@ -65,4 +65,41 @@
 
 .faq summary::-webkit-details-marker {
   display: none;
+}
+
+/* Patient-facing preset: mint, forest green, airy spacing; mobile stacks naturally. */
+.clinic-hero { background: #eaf4ed; }
+.hero-layout { max-width: 72rem; margin: auto; padding: 3.5rem 2rem; display: grid; grid-template-columns: 1.12fr 1fr; align-items: center; gap: 3.5rem; }
+.hero-location { color: var(--color-accent); font-size: .9rem; font-weight: 600; margin-bottom: 1.25rem; }
+.hero-copy h1 { font-size: clamp(2.6rem, 4.7vw, 4rem); font-weight: 600; line-height: 1.09; letter-spacing: -.045em; }
+.hero-copy h1 span { color: var(--color-accent); }
+.hero-description { margin-top: 1.5rem; max-width: 35ch; font-size: 1.125rem; line-height: 1.7; color: var(--color-muted); }
+.hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1.5rem; margin-top: 2rem; }
+.clinic-button { display: inline-flex; align-items: center; justify-content: center; gap: 1.5rem; border-radius: 999px; padding: .95rem 1.5rem; background: var(--color-accent); color: white; font-size: .9rem; font-weight: 600; white-space: nowrap; transition: background .2s, transform .2s, box-shadow .2s; box-shadow: 0 6px 16px #17634e18; }
+.clinic-button:hover { background: var(--color-accent-hover); box-shadow: 0 8px 24px #17634e28; }
+.clinic-button:active { transform: translateY(1px); }
+.clinic-link { color: var(--color-accent); font-size: .9rem; font-weight: 600; text-underline-offset: .3em; }
+.clinic-link:hover { text-decoration: underline; }
+.hero-portrait { position: relative; overflow: hidden; border-radius: 2rem; background: #dcefe9; }
+.hero-portrait > img { width: 100%; height: clamp(25rem, 38vw, 32rem); object-fit: cover; object-position: center top; }
+.hero-portrait figcaption { padding: 1.2rem 4.5rem 1.25rem 1.5rem; background: #ffffff; position: relative; }
+.hero-portrait figcaption > span { display: block; font-size: .8rem; color: var(--color-muted); }
+.hero-portrait figcaption .portrait-greeting { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; color: var(--color-ink); margin-bottom: .25rem; }
+.hero-portrait figcaption a { position: absolute; right: 1.2rem; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%; background: var(--color-accent-soft); color: var(--color-accent); font-size: 1.5rem; }
+.chat-section { background: #e4f1e9; border-block: 1px solid var(--color-line); }
+.chat-card { border-radius: 1.5rem; border: 1px solid #c9dfd2; background: white; box-shadow: 0 18px 50px #17493e12; overflow: hidden; }
+.chat-avatar { height: 3.25rem; width: 3.25rem; border-radius: 50%; object-fit: cover; object-position: center 15%; background: var(--color-accent-soft); }
+.chat-starters { display: flex; flex-wrap: wrap; gap: .5rem; padding: .25rem 1.25rem 1rem; }
+.chat-starters button { border: 1px solid #c8dfd2; border-radius: 999px; padding: .5rem .8rem; font-size: .8rem; color: var(--color-accent); background: #f5faf7; transition: background .2s; }
+.chat-starters button:hover { background: var(--color-accent-soft); }
+.chat-starters button:disabled { opacity: .5; cursor: wait; }
+[data-chat-messages] { overscroll-behavior: contain; scrollbar-width: thin; line-height: 1.65; }
+[data-chat-messages] > p { flex-shrink: 0; overflow-wrap: anywhere; }
+@media (max-width: 767px) {
+  .hero-layout { grid-template-columns: 1fr; padding: 2.5rem 1.25rem; gap: 2rem; }
+  .hero-copy h1 { font-size: clamp(2.35rem, 9vw, 3.5rem); }
+  .hero-portrait > img { height: 21rem; object-position: center top; }
+  .hero-actions { gap: 1rem; }
+  .hero-description { font-size: 1rem; }
+  footer { padding-bottom: 4.5rem; }
 }

@@ -35,6 +35,8 @@ appointments.post('/', async (c) => {
   const parsed = appointmentSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: 'Datos inválidos.' }, 400);
 
+  if (parsed.data.ends_at <= parsed.data.starts_at) return c.json({ error: 'El fin debe ser posterior al inicio.' }, 400);
+  if (parsed.data.starts_at <= Date.now()) return c.json({ error: 'Elegí una fecha futura.' }, 400);
   try {
     const row = await db.insert('appointments', {
       patient_id: parsed.data.patient_id ?? null,
@@ -64,6 +66,12 @@ appointments.put('/:id', async (c) => {
   const parsed = appointmentSchema.partial().safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: 'Datos inválidos.' }, 400);
 
-  const row = await db.update('appointments', c.req.param('id'), parsed.data);
-  return c.json({ appointment: row });
+  const existing = await db.get<{ starts_at: number; ends_at: number }>('appointments', c.req.param('id'));
+  if (!existing) return c.json({ error: 'Turno inexistente.' }, 404);
+  if ((parsed.data.ends_at ?? existing.ends_at) <= (parsed.data.starts_at ?? existing.starts_at)) return c.json({ error: 'El fin debe ser posterior al inicio.' }, 400);
+  if (parsed.data.starts_at != null && parsed.data.starts_at <= Date.now()) return c.json({ error: 'Elegí una fecha futura.' }, 400);
+  try {
+    const row = await db.update('appointments', c.req.param('id'), parsed.data);
+    return c.json({ appointment: row });
+  } catch { return c.json({ error: 'No se pudo guardar: revisá el profesional, paciente y la disponibilidad.' }, 409); }
 });

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button, Card, Loading, PageHeader, cn } from "../components/ui";
-import { useClinicSettings, useSaveClinicSettings } from "../lib/queries";
+import { useMe, useClinicSettings, useSaveClinicSettings } from "../lib/queries";
 
 const WEEKDAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
@@ -82,7 +82,7 @@ function toContent(form: FormState): Record<string, unknown> {
     openingHours: form.hours
       .filter((h) => h.enabled)
       .map((h) => ({ weekday: h.weekday, openMin: timeToMinutes(h.open), closeMin: timeToMinutes(h.close) })),
-    slotMinutes: 30,
+
     obrasSociales: form.obrasSociales
       .split(",")
       .map((s) => s.trim())
@@ -107,6 +107,8 @@ function Input({ label, ...props }: { label: string } & React.InputHTMLAttribute
 export function Landing() {
   const { data, isLoading } = useClinicSettings();
   const save = useSaveClinicSettings();
+  const me = useMe();
+  const publicUrl = me.data?.memberships[0]?.clinic?.publicUrl;
   const [form, setForm] = useState<FormState>(defaultForm());
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
@@ -118,7 +120,8 @@ export function Landing() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await save.mutateAsync({ content: toContent(form) });
+    setSavedAt(null);
+    try { await save.mutateAsync({ content: { ...data?.content, ...toContent(form) } }); } catch { return; }
     setSavedAt(Date.now());
   }
 
@@ -141,6 +144,7 @@ export function Landing() {
         }
       />
 
+      {publicUrl ? <a className="mb-5 inline-block text-sm font-semibold text-accent underline" href={publicUrl} target="_blank" rel="noreferrer">Abrir la web de mi consultorio ↗</a> : <p className="mb-5 text-sm text-muted">El enlace público estará disponible cuando se configure el despliegue.</p>}
       {savedAt ? (
         <p className="mb-4 rounded-lg bg-soft px-3 py-2 text-sm text-body">
           Guardado. Los cambios ya están publicados en tu web.

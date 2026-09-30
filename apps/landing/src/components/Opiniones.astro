@@ -1,6 +1,5 @@
 ---
-import { getClinicData } from '../lib/clinic';
-const clinic = await getClinicData();
+const clinic = Astro.locals.clinic;
 const [first, ...rest] = clinic.testimonials;
 ---
 {first && (

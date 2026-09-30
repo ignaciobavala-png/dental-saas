@@ -1,27 +1,20 @@
 ---
 ---
-<a
-  id="cta-flotante"
-  href="#reservar"
-  class="fixed right-4 bottom-4 z-40 rounded-full bg-accent px-5 py-3 text-sm font-medium text-bone shadow-[0_16px_40px_-16px_rgba(23,73,62,0.7)] transition-opacity duration-300 hover:bg-accent-hover active:translate-y-px md:hidden"
->
-  Reservar turno
+<a id="cta-flotante" href="#chat-secretaria" data-chat-cta class="fixed right-4 bottom-4 z-30 inline-flex items-center gap-2 rounded-full bg-accent py-2 pl-2 pr-5 text-sm font-semibold text-white shadow-lg transition-opacity duration-300 hover:bg-accent-hover active:translate-y-px md:hidden">
+  <img src="/images/asistente-dental.webp" width="36" height="36" class="size-9 rounded-full object-cover object-top" alt="" />
+  Pedir un turno
 </a>
-
-<script is:inline>
-  (function () {
-    var pill = document.getElementById('cta-flotante');
-    var target = document.getElementById('reservar');
-    if (!pill || !target || !('IntersectionObserver' in window)) return;
-    var io = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          pill.style.opacity = entry.isIntersecting ? '0' : '1';
-          pill.style.pointerEvents = entry.isIntersecting ? 'none' : 'auto';
-        });
-      },
-      { rootMargin: '0px 0px -40% 0px' }
-    );
-    io.observe(target);
-  })();
+<script>
+  const pill = document.getElementById('cta-flotante');
+  const targets = [document.getElementById('inicio'), document.getElementById('chat-secretaria'), document.getElementById('reservar')].filter((el): el is HTMLElement => Boolean(el));
+  if (pill && 'IntersectionObserver' in window) {
+    const visible = new Set<Element>();
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => entry.isIntersecting ? visible.add(entry.target) : visible.delete(entry.target));
+      pill.style.opacity = visible.size ? '0' : '1';
+      pill.style.pointerEvents = visible.size ? 'none' : 'auto';
+      pill.inert = visible.size > 0;
+    });
+    targets.forEach((target) => observer.observe(target));
+  }
 </script>

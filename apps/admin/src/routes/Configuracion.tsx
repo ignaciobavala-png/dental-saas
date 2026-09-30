@@ -67,11 +67,12 @@ function SettingsForm({
       <Card className="p-5">
         <h2 className="mb-4 text-sm font-semibold">Horarios de atención</h2>
         <div className="space-y-2">
-          {Array.from({ length: 6 }, (_, weekday) => {
+          {Array.from({ length: 7 }, (_, weekday) => {
             const h = hoursByWeekday.get(weekday);
             return (
               <div key={weekday} className="flex items-center gap-3">
-                <span className="w-12 text-sm capitalize text-muted">{weekdayLabel(weekday)}</span>
+                <input type="checkbox" aria-label={`Atender ${weekdayLabel(weekday)}`} checked={Boolean(h)} onChange={(e) => setForm((f) => ({ ...f, openingHours: e.target.checked ? [...f.openingHours, { weekday, openMin: 540, closeMin: 1140 }] : f.openingHours.filter((hour) => hour.weekday !== weekday) }))} />
+                <span className="w-12 text-sm text-muted">{weekdayLabel(weekday)}</span>
                 {h ? (
                   <div className="flex items-center gap-2">
                     <input
@@ -96,7 +97,7 @@ function SettingsForm({
           })}
         </div>
         <label className="mt-5 block max-w-[12rem]">
-          <span className="text-xs font-medium uppercase tracking-wide text-muted">Duración del slot (min)</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-muted">Intervalo entre turnos (min)</span>
           <input
             type="number"
             min={5}
