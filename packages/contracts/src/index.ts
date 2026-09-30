@@ -215,6 +215,55 @@ export const clinicSettingsSchema = z.object({
 });
 export type ClinicSettings = z.infer<typeof clinicSettingsSchema>;
 
+/**
+ * Proyección pública de un consultorio para la landing
+ * (`GET /api/public/clinic/:slug`). Solo campos aptos para un visitante anónimo:
+ * nada de ids internos de plataforma, sesiones ni configuración privada.
+ */
+export const publicClinicServiceSchema = z.object({
+  id,
+  name: z.string(),
+  description: z.string().nullable(),
+  durationMin: z.number().int().positive(),
+  priceCents: cents.nullable(),
+  color: z.string(),
+});
+export type PublicClinicService = z.infer<typeof publicClinicServiceSchema>;
+
+export const publicClinicDoctorSchema = z.object({
+  id,
+  name: z.string(),
+  specialty: z.string().nullable(),
+  bio: z.string().nullable(),
+  photoUrl: z.string().nullable(),
+  serviceIds: z.array(id),
+});
+export type PublicClinicDoctor = z.infer<typeof publicClinicDoctorSchema>;
+
+export const publicClinicSchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+  tagline: z.string().nullable(),
+  phone: z.string().nullable(),
+  whatsapp: z.string().nullable(),
+  email: z.string().nullable(),
+  address: z.string().nullable(),
+  openingHours: z.array(
+    z.object({
+      weekday: z.number().int().min(0).max(6),
+      openMin: z.number().int(),
+      closeMin: z.number().int(),
+    }),
+  ),
+  slotMinutes: z.number().int().positive().nullable(),
+  obrasSociales: z.array(z.string()),
+  faqs: z.array(z.object({ q: z.string(), a: z.string() })),
+  testimonials: z.array(z.object({ name: z.string(), text: z.string() })),
+  services: z.array(publicClinicServiceSchema),
+  doctors: z.array(publicClinicDoctorSchema),
+});
+export type PublicClinic = z.infer<typeof publicClinicSchema>;
+
 export const aiInquirySchema = z.object({
   id,
   patientName: z.string(),

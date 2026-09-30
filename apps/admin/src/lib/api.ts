@@ -111,6 +111,300 @@ export async function fetchAppointments(): Promise<AppointmentDto[]> {
   return appointments;
 }
 
+/* ----------------------------- Escrituras CRUD ---------------------------- */
+
+export async function createPatient(input: Partial<PatientDto> & { full_name: string }): Promise<PatientDto> {
+  const { patient } = await request<{ patient: PatientDto }>("/api/patients", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return patient;
+}
+
+export async function updatePatient(id: string, input: Partial<PatientDto>): Promise<PatientDto> {
+  const { patient } = await request<{ patient: PatientDto }>(`/api/patients/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+  return patient;
+}
+
+export type ServiceInput = {
+  name: string;
+  description?: string | null;
+  duration_min: number;
+  price_cents?: number | null;
+  code?: string | null;
+  color?: string;
+  active?: boolean;
+};
+
+export async function createService(input: ServiceInput): Promise<ServiceDto> {
+  const { service } = await request<{ service: ServiceDto }>("/api/services", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return service;
+}
+
+export async function updateService(id: string, input: Partial<ServiceInput>): Promise<ServiceDto> {
+  const { service } = await request<{ service: ServiceDto }>(`/api/services/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+  return service;
+}
+
+export type DoctorInput = {
+  name: string;
+  specialty?: string | null;
+  bio?: string | null;
+  photo_url?: string | null;
+  active?: boolean;
+  serviceIds?: string[];
+};
+
+export async function createDoctor(input: DoctorInput): Promise<DoctorDto> {
+  const { doctor } = await request<{ doctor: DoctorDto }>("/api/doctors", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return doctor;
+}
+
+export async function updateDoctor(id: string, input: Partial<DoctorInput>): Promise<DoctorDto> {
+  const { doctor } = await request<{ doctor: DoctorDto }>(`/api/doctors/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+  return doctor;
+}
+
+export async function createAppointment(input: {
+  patient_id: string;
+  doctor_id: string;
+  service_id: string;
+  starts_at: number;
+  ends_at: number;
+  status?: string;
+  notes?: string | null;
+}): Promise<AppointmentDto> {
+  const { appointment } = await request<{ appointment: AppointmentDto }>("/api/appointments", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return appointment;
+}
+
+export async function updateAppointment(id: string, input: Partial<AppointmentDto>): Promise<AppointmentDto> {
+  const { appointment } = await request<{ appointment: AppointmentDto }>(`/api/appointments/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+  return appointment;
+}
+
+/* ----------------------------- Núcleo clínico ----------------------------- */
+
+export type PlanItemDto = {
+  id: string;
+  patient_id: string;
+  service_id: string | null;
+  tooth: string | null;
+  surface: string | null;
+  fee_cents: number;
+  status: string;
+  notes: string | null;
+  sort_order: number;
+};
+
+export type ToothConditionDto = {
+  id: string;
+  patient_id: string;
+  tooth: string;
+  surface: string | null;
+  condition: string;
+  recorded_by: string | null;
+  recorded_at: number;
+};
+
+export type ClinicalNoteDto = {
+  id: string;
+  patient_id: string;
+  doctor_id: string | null;
+  note_date: number;
+  body: string;
+  created_by: string | null;
+};
+
+export type PatientBundleDto = {
+  patient: PatientDto | null;
+  appointments: AppointmentDto[];
+  plan: PlanItemDto[];
+  conditions: ToothConditionDto[];
+  notes: ClinicalNoteDto[];
+};
+
+export async function fetchPatientBundle(id: string): Promise<PatientBundleDto> {
+  return request(`/api/patients/${id}/bundle`);
+}
+
+export async function createPlanItem(input: {
+  patientId: string;
+  serviceId?: string | null;
+  tooth?: string | null;
+  surface?: string | null;
+  feeCents?: number;
+  notes?: string | null;
+}): Promise<PlanItemDto> {
+  const { item } = await request<{ item: PlanItemDto }>("/api/treatment-plan", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return item;
+}
+
+export async function createClinicalNote(input: {
+  patientId: string;
+  doctorId?: string | null;
+  body: string;
+}): Promise<ClinicalNoteDto> {
+  const { note } = await request<{ note: ClinicalNoteDto }>("/api/clinical-notes", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return note;
+}
+
+export async function recordToothCondition(input: {
+  patientId: string;
+  tooth: string;
+  surface?: string | null;
+  condition: string;
+}): Promise<ToothConditionDto> {
+  const { condition } = await request<{ condition: ToothConditionDto }>("/api/tooth-conditions", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return condition;
+}
+
+/* ------------------------- Recalls / espera / IA -------------------------- */
+
+export type RecallDto = {
+  id: string;
+  patient_id: string;
+  service_id: string | null;
+  due_after: string | null;
+  source: string;
+  status: string;
+  notes: string | null;
+};
+
+export type WaitingDto = {
+  id: string;
+  patient_id: string;
+  service_id: string | null;
+  doctor_id: string | null;
+  duration_min: number;
+  status: string;
+  notes: string | null;
+  created_at: number;
+};
+
+export type InquiryDto = {
+  id: string;
+  patient_name: string;
+  topic: string;
+  channel: string;
+  at: number;
+  status: string;
+};
+
+export async function fetchRecalls(status?: string): Promise<RecallDto[]> {
+  const qs = status ? `?status=${status}` : "";
+  const { recalls } = await request<{ recalls: RecallDto[] }>(`/api/recalls${qs}`);
+  return recalls;
+}
+
+export async function createRecall(input: {
+  patientId: string;
+  serviceId?: string | null;
+  dueAfter?: string | null;
+  notes?: string | null;
+}): Promise<RecallDto> {
+  const { recall } = await request<{ recall: RecallDto }>("/api/recalls", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return recall;
+}
+
+export async function updateRecall(id: string, input: { status?: string; notes?: string | null }): Promise<RecallDto> {
+  const { recall } = await request<{ recall: RecallDto }>(`/api/recalls/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+  return recall;
+}
+
+export async function fetchWaiting(status?: string): Promise<WaitingDto[]> {
+  const qs = status ? `?status=${status}` : "";
+  const { waiting } = await request<{ waiting: WaitingDto[] }>(`/api/waiting-list${qs}`);
+  return waiting;
+}
+
+export async function createWaiting(input: {
+  patientId: string;
+  serviceId?: string | null;
+  doctorId?: string | null;
+  durationMin?: number;
+  notes?: string | null;
+}): Promise<WaitingDto> {
+  const { item } = await request<{ item: WaitingDto }>("/api/waiting-list", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return item;
+}
+
+export async function updateWaiting(id: string, input: { status?: string; notes?: string | null }): Promise<WaitingDto> {
+  const { item } = await request<{ item: WaitingDto }>(`/api/waiting-list/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+  return item;
+}
+
+export async function fetchInquiries(status?: string): Promise<InquiryDto[]> {
+  const qs = status ? `?status=${status}` : "";
+  const { inquiries } = await request<{ inquiries: InquiryDto[] }>(`/api/ai-inquiries${qs}`);
+  return inquiries;
+}
+
+export async function updateInquiry(id: string, status: string): Promise<InquiryDto> {
+  const { inquiry } = await request<{ inquiry: InquiryDto }>(`/api/ai-inquiries/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
+  });
+  return inquiry;
+}
+
+export type AuditEntryDto = {
+  id: string;
+  actor_user_id: string | null;
+  actor_type: string;
+  action: string;
+  entity: string | null;
+  entity_id: string | null;
+  at: number;
+};
+
+export async function fetchAudit(): Promise<AuditEntryDto[]> {
+  const { entries } = await request<{ entries: AuditEntryDto[] }>("/api/audit");
+  return entries;
+}
+
 export type ClinicSettingsDto = {
   content: Record<string, unknown> | null;
   theme: Record<string, unknown> | null;

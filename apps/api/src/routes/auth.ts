@@ -73,7 +73,7 @@ auth.post('/signup', async (c) => {
   const clinic = await clinics.create({ name: clinicName, slug });
   await membershipsRepo(c.env.DB).create({ userId: user.id, clinicId: clinic.id, role: 'owner' });
   await domainsRepo(c.env.DB).create({
-    hostname: `${slug}.evoluciondental.com`,
+    hostname: `${slug}.nuestrosaas.com`,
     clinicId: clinic.id,
     kind: 'subdomain',
   });
@@ -111,7 +111,7 @@ auth.post('/signup', async (c) => {
       duration_min: service.duration_min,
       price_cents: null,
       color: service.color,
-      active: 0,
+      active: 1,
       created_at: Date.now(),
     });
   }

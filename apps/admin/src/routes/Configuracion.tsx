@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ClinicSettings } from "@dental/contracts";
 import { Button, Card, Loading, PageHeader } from "../components/ui";
-import { useSettings } from "../lib/queries";
+import { useSaveSettings, useSettings } from "../lib/queries";
 import { minutesToTime, weekdayLabel } from "../lib/format";
 
 function parseTime(value: string): number {
@@ -9,9 +9,18 @@ function parseTime(value: string): number {
   return h * 60 + m;
 }
 
-function SettingsForm({ initial }: { initial: ClinicSettings }) {
+function SettingsForm({
+  initial,
+  pending,
+  saved,
+  onSubmit,
+}: {
+  initial: ClinicSettings;
+  pending: boolean;
+  saved: boolean;
+  onSubmit: (settings: ClinicSettings) => void;
+}) {
   const [form, setForm] = useState(initial);
-  const [saved, setSaved] = useState(false);
 
   const updateContact = (key: keyof ClinicSettings["contact"], value: string) =>
     setForm((f) => ({ ...f, contact: { ...f.contact, [key]: value } }));
@@ -22,15 +31,16 @@ function SettingsForm({ initial }: { initial: ClinicSettings }) {
       openingHours: f.openingHours.map((h) => (h.weekday === weekday ? { ...h, [key]: parseTime(value) } : h)),
     }));
 
-  const save = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
-
   const hoursByWeekday = new Map(form.openingHours.map((h) => [h.weekday, h]));
 
   return (
-    <div className="space-y-6">
+    <form
+      className="space-y-6"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(form);
+      }}
+    >
       <Card className="p-5">
         <h2 className="mb-4 text-sm font-semibold">Datos del consultorio</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -99,19 +109,40 @@ function SettingsForm({ initial }: { initial: ClinicSettings }) {
       </Card>
 
       <div className="flex items-center gap-3">
-        <Button onClick={save}>Guardar cambios</Button>
-        {saved ? <span className="text-sm text-accent">Cambios guardados (demo, no persiste).</span> : null}
+        <Button type="submit" disabled={pending}>
+          {pending ? "Guardando…" : "Guardar cambios"}
+        </Button>
+        {saved ? <span className="text-sm text-accent">Cambios guardados.</span> : null}
       </div>
-    </div>
+    </form>
   );
 }
 
 export function Configuracion() {
   const settings = useSettings();
+  const save = useSaveSettings();
+  const [saved, setSaved] = useState(false);
+
   return (
     <div>
       <PageHeader title="Configuración" subtitle="Datos de la clínica, contacto y horarios" />
-      {settings.isLoading || !settings.data ? <Loading /> : <SettingsForm initial={settings.data} />}
+      {settings.isLoading || !settings.data ? (
+        <Loading />
+      ) : (
+        <SettingsForm
+          initial={settings.data}
+          pending={save.isPending}
+          saved={saved}
+          onSubmit={(form) =>
+            save.mutate(form, {
+              onSuccess: () => {
+                setSaved(true);
+                setTimeout(() => setSaved(false), 2500);
+              },
+            })
+          }
+        />
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Appointment } from "@dental/contracts";
 import { Button, Card, Loading, PageHeader, Segmented, StatusPill, cn, toneStyle } from "../components/ui";
-import { useAppointments, useDoctors, useServices, useWeekAppointments } from "../lib/queries";
+import { useAppointments, useDirectory, useDoctors, useServices, useWeekAppointments } from "../lib/queries";
 import {
   addDays,
   dateKey,
@@ -13,7 +13,6 @@ import {
   startOfToday,
   startOfWeek,
 } from "../lib/format";
-import { patientName, serviceName } from "../lib/mock";
 
 const DAY_MIN = 8 * 60;
 const DAY_MAX = 19 * 60;
@@ -30,11 +29,13 @@ function DayColumn({
   nowMs,
   isToday,
   serviceColor,
+  lookup,
 }: {
   appointments: Appointment[];
   nowMs: number;
   isToday: boolean;
   serviceColor: (id: string | null) => string;
+  lookup: { patientName: (id: string | null) => string; serviceName: (id: string | null) => string };
 }) {
   const nowTop = (minutesSinceMidnight(nowMs) - DAY_MIN) * PX_PER_MIN;
 
@@ -72,10 +73,10 @@ function DayColumn({
               color: tone.fg,
               borderLeftColor: tone.fg,
             }}
-            title={`${formatTimeRange(a.startsAt, a.endsAt)} · ${patientName(a.patientId)}`}
+            title={`${formatTimeRange(a.startsAt, a.endsAt)} · ${lookup.patientName(a.patientId)}`}
           >
-            <p className="truncate font-semibold">{patientName(a.patientId)}</p>
-            {height > 34 ? <p className="truncate text-[11px] opacity-80">{serviceName(a.serviceId)}</p> : null}
+            <p className="truncate font-semibold">{lookup.patientName(a.patientId)}</p>
+            {height > 34 ? <p className="truncate text-[11px] opacity-80">{lookup.serviceName(a.serviceId)}</p> : null}
           </div>
         );
       })}
@@ -99,6 +100,7 @@ export function Agenda() {
   const dayAppts = useAppointments(dayMs);
   const weekStart = startOfWeek(dayMs);
   const weekAppts = useWeekAppointments(weekStart);
+  const lookup = useDirectory();
 
   const serviceColor = (id: string | null) => services.data?.find((s) => s.id === id)?.color ?? "accent";
   const nowMs = Date.now();
@@ -189,6 +191,7 @@ export function Agenda() {
                   nowMs={nowMs}
                   isToday={isToday}
                   serviceColor={serviceColor}
+                  lookup={lookup}
                 />
               ))}
             </div>
@@ -219,7 +222,7 @@ export function Agenda() {
                           style={{ backgroundColor: tone.bg, color: tone.fg, borderLeftColor: tone.fg }}
                         >
                           <p className="font-medium tabular-nums">{formatTime(a.startsAt)}</p>
-                          <p className="truncate">{patientName(a.patientId)}</p>
+                          <p className="truncate">{lookup.patientName(a.patientId)}</p>
                         </div>
                       );
                     })

@@ -1,9 +1,22 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, BadgeCheck, CalendarPlus, Clock, Sparkles, UserPlus } from "lucide-react";
 import { Avatar, Button, Card, EmptyState, Loading, PageHeader, StatusPill, ToneChip } from "../components/ui";
-import { useAiInquiries, useAppointments, useDaySummary, useDoctors, useRecalls, useWaitingList } from "../lib/queries";
+import { AppointmentForm, Modal, PatientForm } from "../components/forms";
+import {
+  useAiInquiries,
+  useAppointments,
+  useCreateAppointment,
+  useCreatePatient,
+  useDaySummary,
+  useDirectory,
+  useDoctors,
+  usePatients,
+  useRecalls,
+  useServices,
+  useWaitingList,
+} from "../lib/queries";
 import { formatMoney, formatTime, startOfToday } from "../lib/format";
-import { patientName, serviceName } from "../lib/mock";
 
 function Stat({
   label,
@@ -36,6 +49,12 @@ export function Hoy() {
   const recalls = useRecalls();
   const waiting = useWaitingList();
   const inquiries = useAiInquiries();
+  const { patientName, serviceName } = useDirectory();
+  const patients = usePatients();
+  const services = useServices();
+  const createAppointment = useCreateAppointment();
+  const createPatient = useCreatePatient();
+  const [modal, setModal] = useState<"none" | "appt" | "patient">("none");
 
   const doctorName = (id: string | null) => doctors.data?.find((d) => d.id === id)?.name ?? "—";
   const now = Date.now();
@@ -54,10 +73,10 @@ export function Hoy() {
         subtitle="Turnos, consultas nuevas y pendientes del consultorio"
         actions={
           <>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => setModal("patient")}>
               <UserPlus size={16} /> Paciente
             </Button>
-            <Button size="sm">
+            <Button size="sm" onClick={() => setModal("appt")}>
               <CalendarPlus size={16} /> Nuevo turno
             </Button>
           </>
@@ -192,6 +211,29 @@ export function Hoy() {
           </Card>
         </div>
       </div>
+      <Modal open={modal === "patient"} onClose={() => setModal("none")} title="Nuevo paciente">
+        <PatientForm
+          pending={createPatient.isPending}
+          onCancel={() => setModal("none")}
+          onSubmit={(values) =>
+            createPatient.mutate(
+              { full_name: values.full_name, phone: values.phone, email: values.email, document: values.document, birthdate: values.birthdate, notes: values.notes },
+              { onSuccess: () => setModal("none") },
+            )
+          }
+        />
+      </Modal>
+
+      <Modal open={modal === "appt"} onClose={() => setModal("none")} title="Nuevo turno">
+        <AppointmentForm
+          patients={patients.data ?? []}
+          services={services.data ?? []}
+          doctors={doctors.data ?? []}
+          pending={createAppointment.isPending}
+          onCancel={() => setModal("none")}
+          onSubmit={(values) => createAppointment.mutate(values, { onSuccess: () => setModal("none") })}
+        />
+      </Modal>
     </div>
   );
 }

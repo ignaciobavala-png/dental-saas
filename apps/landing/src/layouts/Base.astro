@@ -1,5 +1,5 @@
 ---
-import { clinic } from '../data/clinic';
+import { getClinicData } from '../lib/clinic';
 import FloatingCta from '../components/FloatingCta.astro';
 import '../styles/global.css';
 
@@ -8,38 +8,31 @@ interface Props {
   description: string;
 }
 const { title, description } = Astro.props;
+const clinic = await getClinicData();
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : Astro.url.href;
+
+const SCHEMA_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const formatTime = (min: number): string =>
+  `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Dentist',
-  name: clinic.fullName,
+  name: clinic.name,
   description,
-  telephone: clinic.phone,
-  email: clinic.email,
+  ...(clinic.phone ? { telephone: clinic.phone } : {}),
+  ...(clinic.email ? { email: clinic.email } : {}),
   url: canonical,
   priceRange: '$$',
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: clinic.address.street,
-    addressLocality: `${clinic.address.locality}, ${clinic.address.city}`,
-    postalCode: clinic.address.zip,
-    addressCountry: 'AR',
-  },
-  openingHoursSpecification: [
-    {
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-      opens: '09:00',
-      closes: '19:00',
-    },
-    {
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: 'Saturday',
-      opens: '09:00',
-      closes: '13:00',
-    },
-  ],
+  ...(clinic.address
+    ? { address: { '@type': 'PostalAddress', streetAddress: clinic.address, addressCountry: 'AR' } }
+    : {}),
+  openingHoursSpecification: clinic.openingHours.map((h) => ({
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: SCHEMA_DAYS[h.weekday],
+    opens: formatTime(h.openMin),
+    closes: formatTime(h.closeMin),
+  })),
 };
 ---
 <!doctype html>

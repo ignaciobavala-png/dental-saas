@@ -1,24 +1,29 @@
-// Fixture de la clínica para la maqueta. En producción esto sale de la API
-// (service binding) según el hostname. Ver docs/09-frontend.md.
+// Fixture local de la landing. Es el fallback cuando no hay API configurada o
+// no responde (ver src/lib/clinic.ts) para que el build nunca se rompa. En
+// producción el contenido sale de `GET /api/public/clinic/:slug`.
+import type { ClinicData } from '../lib/clinic';
 
-export const clinic = {
-  name: 'Arocena',
-  fullName: 'Odontología Arocena',
+export const fallbackClinic: ClinicData = {
+  slug: 'consultorio-demo',
+  name: 'Odontología Arocena',
   tagline: 'Odontología en Caballito',
   phone: '+54 11 4633 7842',
   phoneHref: 'tel:+541146337842',
   whatsapp: 'https://wa.me/5491146337842',
   email: 'hola@odontologiaarocena.com.ar',
-  address: {
-    street: 'Av. Rivadavia 4820',
-    locality: 'Caballito',
-    city: 'CABA',
-    zip: 'C1424',
-  },
+  address: 'Av. Rivadavia 4820, Caballito, CABA',
   mapsUrl: 'https://maps.google.com/?q=Av.+Rivadavia+4820,+Caballito,+CABA',
   hours: [
     { day: 'Lunes a viernes', time: '9:00 a 19:00' },
     { day: 'Sábados', time: '9:00 a 13:00' },
+  ],
+  openingHours: [
+    { weekday: 1, openMin: 540, closeMin: 1140 },
+    { weekday: 2, openMin: 540, closeMin: 1140 },
+    { weekday: 3, openMin: 540, closeMin: 1140 },
+    { weekday: 4, openMin: 540, closeMin: 1140 },
+    { weekday: 5, openMin: 540, closeMin: 1140 },
+    { weekday: 6, openMin: 540, closeMin: 780 },
   ],
   obrasSociales: ['OSDE', 'Swiss Medical', 'Galeno', 'IOMA', 'Medicus', 'Omint'],
   treatments: [
@@ -87,8 +92,7 @@ export const clinic = {
       detail: 'Paciente desde 2022',
     },
     {
-      quote:
-        'Me resolvieron una urgencia un sábado sin turno. Un trato impecable.',
+      quote: 'Me resolvieron una urgencia un sábado sin turno. Un trato impecable.',
       name: 'Rubén Sández',
       detail: 'Implante en 2024',
     },
@@ -115,4 +119,4 @@ export const clinic = {
       a: 'Los tratamientos largos se abonan por etapa, y con tarjeta podés financiar en cuotas según el plan de tu banco.',
     },
   ],
-} as const;
+};

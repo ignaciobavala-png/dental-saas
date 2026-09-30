@@ -1,6 +1,8 @@
 ---
-import { clinic } from '../data/clinic';
+import { getClinicData } from '../lib/clinic';
+const clinic = await getClinicData();
 ---
+{clinic.team.length > 0 && (
 <section id="equipo" class="scroll-mt-20 bg-surface">
   <div class="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-24">
     <div class="reveal max-w-2xl">
@@ -33,3 +35,4 @@ import { clinic } from '../data/clinic';
     </div>
   </div>
 </section>
+)}

@@ -1,5 +1,6 @@
 ---
-import { clinic } from '../data/clinic';
+import { getClinicData } from '../lib/clinic';
+const clinic = await getClinicData();
 ---
 <section class="bg-surface">
   <div class="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">

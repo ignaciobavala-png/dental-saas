@@ -65,5 +65,5 @@ export async function seedDemoClinic() {
     args: [clinicId, doctor.id, service.id],
   });
 
-  return { clinicId, db, ctx, serviceId: service.id, doctorId: doctor.id };
+  return { clinicId, slug, db, ctx, serviceId: service.id, doctorId: doctor.id };
 }

@@ -8,9 +8,9 @@ distintos: cambian el `TenantContext` y el registro de tools, no el pipeline.
 | Quién le habla | Paciente anónimo (landing) | Odontólogo / recepcionista (dashboard) |
 | `TenantContext` | `role: 'visitor'`, `userId: null` | el usuario logueado |
 | Tenant | desde el hostname | desde la sesión |
-| Puede | leer público + **crear** turno (`pending`) | **leer y escribir**: agenda, pacientes, disponibilidad |
-| Alcance | solo esa clínica | el de **ese usuario** (un dentist: solo su agenda) |
-| Estado | **MVP** (H5) | **fase 2 fast-follow** (H8) |
+| Puede | leer público + **crear** turno (`pending`) | **leer y escribir**: agenda, pacientes, turnos, catálogo y datos del consultorio |
+| Alcance | solo esa clínica | el de **ese usuario** (las tools se filtran por su rol) |
+| Estado | **MVP** (H5) | **implementado** (set inicial de escritura; ver §6.1) |
 
 ## 1. Motor
 
@@ -86,6 +86,9 @@ Consecuencias:
 `get_clinic_information`, `get_services`, `get_doctors`, `get_available_slots`,
 `create_appointment` (con `source: 'ai'`, `status: 'pending'`).
 
+Estas cuatro lecturas se comparten con el copiloto interno (`publicReadTools` en
+`apps/api/src/ai/tools.ts`), que les suma las de §6.1.
+
 ### 5.2 Esquema (recorte)
 
 ```ts
@@ -137,34 +140,63 @@ export function buildPublicTools(ctx: TenantContext) {
 
 ## 6. Asistente interno (dashboard)
 
-### 6.1 Tools de escritura propuestas
+### 6.1 Tools implementadas
 
-| Tool | Capacidad | Riesgo |
+`buildStaffTools` (`apps/api/src/ai/tools.ts`) parte de las lecturas públicas y
+agrega:
+
+| Tool | Capacidad | Estado |
 |---|---|---|
-| `get_agenda(range, doctorId?)` | `appointments:read` | lectura |
-| `find_patient(query)` | `patients:read` | lectura |
-| `register_patient(data)` | `patients:write` | reversible |
-| `update_patient(id, data)` | `patients:write` | reversible |
-| `create_appointment(...)` | `appointments:write` | confirmación |
-| `reschedule_appointment(id, startsAt)` | `appointments:write` | confirmación |
-| `cancel_appointment(id, reason?)` | `appointments:write` | confirmación |
-| `block_availability(doctorId, date, kind)` | `availability:write` | confirmación |
-| `list_recalls(dueBefore?)` | `recalls:read` | lectura |
-| `schedule_recall(id, startsAt)` | `recalls:write` | confirmación |
-| `list_waiting(serviceId?)` | `waiting:read` | lectura |
-| `offer_waiting_slot(id, startsAt)` | `waiting:write` | confirmación |
-| `list_pending_conversations()` | `conversations:read` | lectura |
+| `get_agenda(dateFrom, dateTo, doctorId?, status?)` | `appointments:read` | ✅ implementada |
+| `find_patient(query)` | `patients:read` | ✅ implementada |
+| `create_patient(data)` | `patients:write` | ✅ implementada |
+| `update_patient(id, data)` | `patients:write` | ✅ implementada |
+| `book_appointment(...)` (paciente existente o nuevo, `confirmed`) | `appointments:write` | ✅ implementada |
+| `reschedule_appointment(id, startsAt, doctorId?)` | `appointments:write` | ✅ implementada |
+| `cancel_appointment(id, reason?)` | `appointments:write` | ✅ implementada |
+| `create_service(data)` | `services:write` | ✅ implementada |
+| `update_service(id, data)` | `services:write` | ✅ implementada |
+| `create_doctor(data)` | `doctors:write` | ✅ implementada |
+| `update_doctor(id, data)` | `doctors:write` | ✅ implementada |
+| `update_clinic_settings(patch)` | `landing:write` | ✅ implementada |
+| `list_treatment_plan(patientId)` | `clinical:read` | ✅ implementada |
+| `add_treatment_plan_item(...)` | `clinical:write` | ✅ implementada |
+| `record_tooth_condition(...)` | `clinical:write` | ✅ implementada |
+| `log_clinical_note(...)` | `clinical:write` | ✅ implementada |
+| `list_recalls()` / `create_recall(...)` | `recalls:*` | ✅ implementadas |
+| `list_waiting_list()` / `add_to_waiting_list(...)` | `waiting:*` | ✅ implementadas |
+| `block_availability(doctorId, date, kind)` | `availability:write` | ⏳ pendiente (sin ruta) |
+| `list_pending_conversations()` | `conversations:read` | ⏳ pendiente (sin tabla) |
 
-`billing:*`, `settings` y **toda la ficha clínica** (odontograma, plan de tratamiento,
+Las tools llaman a los services de dominio (`bookingService.create/agenda/
+reschedule/cancel`, `patientsService.*`, `catalogService.*`,
+`treatmentPlanService`, `toothConditionService`, `clinicalNoteService`,
+`recallService`, `waitingService`, `clinicService.updateContent`), que son los
+mismos que usan las rutas HTTP: la IA y el dashboard no pueden divergir.
+`update_clinic_settings` **fusiona** con el contenido actual (el panel sigue
+reemplazando) para que el modelo no tenga que reescribir todo el JSON.
+
+Dos capas transversales a toda escritura del copiloto:
+
+- **Auditoría** (`apps/api/src/lib/audit.ts` → `audit_log`): cada tool de
+  escritura registra `actor_type: 'ai'`, el usuario del staff, la acción y la
+  entidad. La auditoría nunca voltea la operación auditada.
+- **Idempotencia** (`idempotencyService.once`): `book_appointment` ejecuta una
+  sola vez por `toolCallId`, así un reintento del modelo no duplica el turno.
+  *(Alcance actual: reintentos del SDK. Un reintento del usuario con otro
+  `toolCallId` no está cubierto todavía; ver §6.2.)*
+
+`billing:*` y **toda la ficha clínica** (odontograma, plan de tratamiento,
 evolución, laboratorio) **quedan fuera del agente** (nunca autónomos ni legibles).
 
 ### 6.2 Modelo de seguridad para acciones
 
 1. **Autorización = la del usuario.** El agente hereda su `TenantContext`; nunca es superusuario.
 2. **Aislamiento intacto.** Pasa por `TenantDb`; el modelo no provee `clinic_id`.
-3. **Confirmación para lo consecuente.** Lecturas y borradores son autónomos; las
-   escrituras que afectan al paciente o a la agenda se **proponen** (acción pendiente
-   estructurada) y la persona **confirma** antes de ejecutar.
+3. **Confirmación para lo consecuente.** Hoy es **conversacional**: el prompt
+   interno le pide al modelo confirmar con el staff antes de cancelar,
+   reprogramar o cambiar la configuración. La *acción pendiente estructurada*
+   (propuesta + botón confirmar en el panel) todavía no está implementada.
 4. **Auditoría.** Cada acción iniciada por IA se registra en `audit_log`
    (`actor_user_id`, `actor_type: 'ai'`, `conversation_id`, tool, args, entidad).
 5. **Reversibilidad = operación inversa declarada**, no restaurar un snapshot
@@ -201,7 +233,11 @@ evolución, laboratorio) **quedan fuera del agente** (nunca autónomos ni legibl
 
 ## 10. Estado por hito
 
-- **MVP (H5):** agente público.
-- **Fase 2 (H8):** asistente interno, reutilizando el mismo motor. Set inicial de
-  escrituras: `reschedule` y `cancel` con confirmación, después `register_patient`;
-  `billing`/`settings` fuera.
+- **MVP (H5):** agente público. ✅
+- **Fase 2 (H8):** asistente interno con el set inicial de escritura de §6.1
+  (agenda, pacientes, turnos, catálogo y configuración). ✅
+- **Pendiente:** tools de recalls, lista de espera, bloques de disponibilidad y
+  conversaciones (necesitan tablas/rutas que no existen), persistencia de
+  conversaciones (§7), auditoría en `audit_log` (§6.2), idempotencia por clave e
+  intervención estructurada con confirmación. Rate limit y Turnstile del
+  endpoint público (§9) siguen sin implementar.

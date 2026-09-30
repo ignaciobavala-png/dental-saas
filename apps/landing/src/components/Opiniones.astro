@@ -1,7 +1,9 @@
 ---
-import { clinic } from '../data/clinic';
+import { getClinicData } from '../lib/clinic';
+const clinic = await getClinicData();
 const [first, ...rest] = clinic.testimonials;
 ---
+{first && (
 <section class="bg-surface">
   <div class="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:px-8 md:py-24 lg:grid-cols-[1.3fr_1fr] lg:gap-16">
     <figure class="reveal">
@@ -25,3 +27,4 @@ const [first, ...rest] = clinic.testimonials;
     </div>
   </div>
 </section>
+)}

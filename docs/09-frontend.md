@@ -2,16 +2,47 @@
 
 Dos superficies con requisitos opuestos → dos apps, un monorepo.
 
-| | Landing pública (`apps/landing`) | Dashboard (`apps/admin`) |
+**Regla de oro: 1 app = 1 superficie = 1 audiencia.** No se fusionan aunque compartan
+tokens. Antes de tocar código, ubicá la superficie en el mapa de abajo.
+
+> La antigua landing de venta del SaaS (`apps/site`, marca "Evolución Dental") se
+> eliminó del repo en la primera etapa. El alta de cuentas vive ahora en
+> `apps/admin` (`/login`), que era el objetivo del signup del marketing.
+
+## 0. Mapa de superficies
+
+| App | Superficie | Quién la ve | Dominio | Tech |
+|---|---|---|---|---|
+| `apps/landing` | Web pública de cada consultorio | el paciente (anónimo) | `{slug}.…` + dominio propio | **Astro**, por ahora estático |
+| `apps/admin` | Panel de cada consultorio | odontólogo / recepción | `app.…` (assets del Worker `api`) | **React SPA** (Vite + React Router) |
+
+| | `apps/landing` | `apps/admin` |
 |---|---|---|
-| Herramienta | **Astro SSR** en Workers | **React SPA** (Vite + React Router) |
 | Objetivo | Convertir + posicionar (SEO) | Operar rápido |
 | JS en cliente | Cero por defecto; islas puntuales | App stateful |
-| Datos | vía `apps/api` (service binding) | vía `/api` (mismo origen) |
-| Estética | Marketing premium | Densidad de herramienta |
+| Datos | vía `apps/api` (contenido público) | vía `/api` (mismo origen) |
+| Estética | Marketing premium por clínica | Densidad de herramienta |
 
 Comparten **tokens** (`packages/theme`) y **contratos** (`packages/contracts`), no
 componentes.
+
+### 0.1 ¿Qué app toco para…?
+
+| Quiero… | App |
+|---|---|
+| Cambiar los tratamientos, el equipo o el hero de una clínica | `apps/landing` |
+| Agregar/editar una pantalla de agenda, pacientes o ficha | `apps/admin` |
+| Cambiar un endpoint, una regla de negocio o una tool de IA | `apps/api` |
+| Cambiar un color/token transversal | `packages/theme` |
+| Cambiar un tipo compartido de la API | `packages/contracts` |
+
+### 0.2 Nombres que se confunden
+
+- **`landing`** = la web **de cada clínica**. Hay una por consultorio.
+- **`admin`** = el panel **del consultorio**, no un admin de la plataforma (no existe).
+
+Referirse siempre por ruta completa (`apps/landing/src/components/…`). Ver
+`apps/README.md` para el mapa de dev/puertos.
 
 ## 1. Stack
 
@@ -22,12 +53,14 @@ componentes.
 - `react-odontogram` (MIT, ver ADR-0007) para el odontograma FDI + `lucide-react`.
 - Imágenes: R2 + Cloudflare Images/transform.
 
-## 2. Landing (`apps/landing`)
+## 2. Landing de la clínica (`apps/landing`)
 
 ### 2.1 Responsabilidad
 
-- Resolver el tenant por hostname y renderizar HTML en el servidor (SEO).
-- Aplicar el theme y componer las secciones con el contenido de la clínica.
+- Resolver qué consultorio mostrar. **Hoy:** `PUBLIC_CLINIC_SLUG` por env; el
+  hostname→clínica (service binding + SSR en Workers) es el paso de deploy (H4).
+- Componer las secciones con el contenido público de la clínica
+  (`GET /api/public/clinic/:slug`) y, si la API no responde, caer al fixture local.
 - Islas React para: **chat de la secretaría**, formulario de reserva, galería.
 
 ### 2.2 Motor de themes
@@ -85,7 +118,8 @@ Antes de construir componentes se define la dirección (ver
   el formulario**.
 - Chat con streaming, turnos como **chips tocables**, card de confirmación, prompts
   sugeridos y fallback a WhatsApp.
-- Consume `/api/public/chat` con Turnstile + rate limit.
+- Consume `POST /api/secretaria/chat?clinic=<slug>`. Turnstile + rate limit son
+  pendientes de deploy (todavía no implementados).
 
 ### 2.6 Performance y SEO
 
@@ -96,7 +130,7 @@ Antes de construir componentes se define la dirección (ver
 - Por tenant: metadata, OpenGraph, **JSON-LD `Dentist`**, sitemap, canonical desde
   hostname. i18n preparado (es-AR primero).
 
-## 3. Dashboard (`apps/admin`)
+## 3. Dashboard del consultorio (`apps/admin`)
 
 - **"Hoy"** como pantalla de entrada: próximos turnos, cancelaciones, consultas
   nuevas de la IA, disponibilidad, acciones pendientes del asistente, y **recalls /

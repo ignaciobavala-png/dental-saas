@@ -2,12 +2,15 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, UserPlus } from "lucide-react";
 import { Avatar, Button, Card, EmptyState, Loading, PageHeader } from "../components/ui";
-import { usePatients } from "../lib/queries";
+import { Modal, PatientForm } from "../components/forms";
+import { useCreatePatient, usePatients } from "../lib/queries";
 import { ageFromBirthdate } from "../lib/format";
 
 export function Pacientes() {
   const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
   const patients = usePatients(query);
+  const createPatient = useCreatePatient();
 
   return (
     <div>
@@ -15,11 +18,25 @@ export function Pacientes() {
         title="Pacientes"
         subtitle="Fichas y datos de contacto del consultorio"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => setOpen(true)}>
             <UserPlus size={16} /> Nuevo paciente
           </Button>
         }
       />
+
+      <Modal open={open} onClose={() => setOpen(false)} title="Nuevo paciente">
+        <PatientForm
+          pending={createPatient.isPending}
+          onCancel={() => setOpen(false)}
+          onSubmit={(values) =>
+            createPatient.mutate(
+              { full_name: values.full_name, phone: values.phone, email: values.email, document: values.document, birthdate: values.birthdate, notes: values.notes },
+              { onSuccess: () => setOpen(false) },
+            )
+          }
+        />
+      </Modal>
+
 
       <div className="mb-4 flex items-center gap-2 rounded-lg border border-line bg-panel px-3 py-2">
         <Search size={16} className="text-muted" />
@@ -83,7 +100,7 @@ export function Pacientes() {
       </Card>
 
       <p className="mt-3 text-xs text-muted">
-        {(patients.data ?? []).length} {(patients.data ?? []).length === 1 ? "paciente" : "pacientes"} · datos de demo
+        {(patients.data ?? []).length} {(patients.data ?? []).length === 1 ? "paciente" : "pacientes"}
       </p>
     </div>
   );

@@ -1,9 +1,11 @@
 ---
+import { getClinicData } from '../lib/clinic';
 import Base from '../layouts/Base.astro';
 import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
 import Obras from '../components/Obras.astro';
 import Tratamientos from '../components/Tratamientos.astro';
+import Pasos from '../components/Pasos.astro';
 import Equipo from '../components/Equipo.astro';
 import Secretaria from '../components/Secretaria.astro';
 import Galeria from '../components/Galeria.astro';
@@ -12,16 +14,19 @@ import Ubicacion from '../components/Ubicacion.astro';
 import Faq from '../components/Faq.astro';
 import Cta from '../components/Cta.astro';
 import Footer from '../components/Footer.astro';
+
+const clinic = await getClinicData();
 ---
 <Base
-  title="Odontología Arocena | Dentista en Caballito, CABA"
-  description="Consultorio odontológico en Caballito. Turnos online, obras sociales y tratamientos de odontología general, ortodoncia, implantes y estética dental."
+  title={`${clinic.name} | Odontología`}
+  description="Consultorio odontológico. Turnos online, obras sociales y tratamientos de odontología general, ortodoncia, implantes y estética dental."
 >
   <Nav />
   <main>
     <Hero />
     <Obras />
     <Tratamientos />
+    <Pasos />
     <Equipo />
     <Secretaria />
     <Galeria />

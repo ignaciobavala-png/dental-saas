@@ -31,7 +31,7 @@
 | A10 | **Recuperación de contraseña / emails de auth** | Depende de A2 (Better Auth) | — |
 | A11 | **Modelo de cobro (MercadoPago)** | **Suscripción recurrente** (`preapproval`), con webhook idempotente y baja | Pago único + renovación manual |
 | A12 | **Momento de activación del consultorio** | **Trial al registrarse**; `clinics.status` → `active` con el pago **confirmado por webhook** | Pago antes de crear el consultorio |
-| A13 | **Dónde vive el registro/checkout** | **Sitio de marketing** (`apps/site`) como isla que llama a `apps/api` | Derivar a `app.nuestrosaas.com/empezar` |
+| A13 | **Dónde vive el registro/checkout** | **`apps/admin`** (`/login`, pantalla combinada login/signup) que llama a `apps/api`; el sitio de marketing se eliminó (ADR-0010) | Reintroducir un sitio de marketing dedicado más adelante |
 | A14 | **Conexión de dominio propio** | **Asistida por nosotros** en el MVP (Cloudflare for SaaS) | Self-serve desde el panel (post-MVP) |
 
 ## 3. Registro de decisiones (ADR)
@@ -129,7 +129,7 @@
 ### ADR-0009 — Tercera superficie: sitio de marketing del producto
 
 - **Fecha:** 2026-09-27
-- **Estado:** aceptada
+- **Estado:** revertida por [ADR-0010](#adr-0010--eliminar-la-superficie-de-marketing-del-saas)
 - **Contexto:** la venta del software (a odontólogos) es una superficie distinta de la
   landing pública por consultorio (a pacientes). La competencia (Dentalink) resuelve
   esa venta desde un sitio de marketing propio.
@@ -140,5 +140,21 @@
 - **Consecuencias:** una superficie más en el monorepo. `apps/landing` sigue siendo la
   landing por tenant. El registro/checkout del sitio se resuelve contra `apps/api`
   (ver A11–A13).
+
+### ADR-0010 — Eliminar la superficie de marketing del SaaS
+
+- **Fecha:** 2026-09-29
+- **Estado:** aceptada
+- **Contexto:** para el primer test importa el ciclo del consultorio (landing pública +
+  panel). La landing de venta del SaaS (`apps/site`) sumaba una tercera superficie a
+  mantener y todavía no estaba cableada a ningún deploy. El alta de cuentas ya existía
+  en el panel (`apps/admin` `/login`, pantalla combinada login/signup), así que el
+  signup no dependía del marketing.
+- **Decisión:** eliminar `apps/site` del repo. El alta vive en `apps/admin`; el foco
+  pasa a `apps/landing` (web del consultorio) y `apps/admin` (panel). `DESIGN.md` queda
+  como referencia histórica de la identidad Cal.com del SaaS.
+- **Consecuencias:** el monorepo vuelve a dos frontends + backend. Si más adelante se
+  retoma una web de venta, se recupera del historial de git o se rehace. El signup ya
+  no recibe tráfico desde un sitio de marketing (ver A13).
 
 <!-- Agregar ADRs nuevos debajo de esta línea. -->

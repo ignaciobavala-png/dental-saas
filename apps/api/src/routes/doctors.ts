@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { can } from '@dental/core';
 import type { AppBindings } from '../env';
 import { requireTenant } from '../lib/request-context';
+import { catalogService } from '../domain/services';
 
 const doctorSchema = z.object({
   name: z.string().min(1),
@@ -43,25 +44,17 @@ doctors.post('/', async (c) => {
 
   const parsed = doctorSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: 'Datos inválidos.' }, 400);
-  const { serviceIds, ...rest } = parsed.data;
 
-  const row = await db.insert<{ id: string }>('doctors', {
-    name: rest.name,
-    specialty: rest.specialty ?? null,
-    bio: rest.bio ?? null,
-    photo_url: rest.photo_url ?? null,
-    active: rest.active === false ? 0 : 1,
-    created_at: Date.now(),
-  } as never);
+  const row = await catalogService.createDoctor(db, {
+    name: parsed.data.name,
+    specialty: parsed.data.specialty ?? null,
+    bio: parsed.data.bio ?? null,
+    photoUrl: parsed.data.photo_url ?? null,
+    active: parsed.data.active,
+    serviceIds: parsed.data.serviceIds,
+  });
 
-  for (const serviceId of serviceIds ?? []) {
-    await db.scoped({
-      sql: 'INSERT INTO doctor_services (clinic_id, doctor_id, service_id) VALUES (?, ?, ?)',
-      args: [db.clinicId, row.id, serviceId],
-    });
-  }
-
-  return c.json({ doctor: { ...row, serviceIds: serviceIds ?? [] } }, 201);
+  return c.json({ doctor: row }, 201);
 });
 
 doctors.put('/:id', async (c) => {
@@ -72,28 +65,16 @@ doctors.put('/:id', async (c) => {
 
   const parsed = doctorSchema.partial().safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: 'Datos inválidos.' }, 400);
-  const { serviceIds, ...rest } = parsed.data;
-  const id = c.req.param('id');
 
-  const patch: Record<string, unknown> = {};
-  if (rest.name !== undefined) patch.name = rest.name;
-  if (rest.specialty !== undefined) patch.specialty = rest.specialty;
-  if (rest.bio !== undefined) patch.bio = rest.bio;
-  if (rest.photo_url !== undefined) patch.photo_url = rest.photo_url;
-  if (rest.active !== undefined) patch.active = rest.active ? 1 : 0;
-
-  const row = Object.keys(patch).length > 0 ? await db.update('doctors', id, patch) : await db.get('doctors', id);
+  const row = await catalogService.updateDoctor(db, c.req.param('id'), {
+    name: parsed.data.name,
+    specialty: parsed.data.specialty,
+    bio: parsed.data.bio,
+    photoUrl: parsed.data.photo_url,
+    active: parsed.data.active,
+    serviceIds: parsed.data.serviceIds,
+  });
   if (!row) return c.json({ error: 'No encontrado.' }, 404);
-
-  if (serviceIds) {
-    await db.scoped({ sql: 'DELETE FROM doctor_services WHERE clinic_id = ? AND doctor_id = ?', args: [db.clinicId, id] });
-    for (const serviceId of serviceIds) {
-      await db.scoped({
-        sql: 'INSERT INTO doctor_services (clinic_id, doctor_id, service_id) VALUES (?, ?, ?)',
-        args: [db.clinicId, id, serviceId],
-      });
-    }
-  }
 
   return c.json({ doctor: row });
 });

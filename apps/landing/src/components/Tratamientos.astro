@@ -1,5 +1,6 @@
 ---
-import { clinic } from '../data/clinic';
+import { getClinicData } from '../lib/clinic';
+const clinic = await getClinicData();
 ---
 <section id="tratamientos" class="scroll-mt-20">
   <div class="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-24">
@@ -12,18 +13,20 @@ import { clinic } from '../data/clinic';
       </p>
     </div>
 
+    {clinic.treatments.length > 0 && (
     <ul class="reveal mt-12 divide-y divide-line border-t border-line">
       {clinic.treatments.map((t) => (
         <li class="grid grid-cols-1 items-baseline gap-2 py-6 sm:grid-cols-[1.4fr_1fr_auto] sm:gap-6">
           <div>
             <h3 class="font-display text-xl font-semibold text-ink">{t.name}</h3>
-            <p class="mt-1 text-sm leading-relaxed text-muted">{t.detail}</p>
+            {t.detail && <p class="mt-1 text-sm leading-relaxed text-muted">{t.detail}</p>}
           </div>
           <p class="text-sm text-muted sm:pt-1">{t.duration}</p>
           <p class="font-medium text-ink sm:pt-1 sm:text-right">{t.price}</p>
         </li>
       ))}
     </ul>
+    )}
 
     <a href="#reservar" class="mt-10 inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline">
       Reservar un turno <span aria-hidden="true">→</span>

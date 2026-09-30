@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, CalendarPlus, Pencil } from "lucide-react";
 import { Odontogram } from "react-odontogram";
 import "react-odontogram/style.css";
 import type { TreatmentPlanStatus } from "@dental/contracts";
 import { Avatar, Button, Card, EmptyState, Loading, StatusPill, cn } from "../components/ui";
-import { usePatient } from "../lib/queries";
+import { useDirectory, useDoctors, usePatient, usePatients, useServices, useCreateAppointment, useUpdatePatient } from "../lib/queries";
+import { AppointmentForm, Modal, PatientForm } from "../components/forms";
 import {
   ageFromBirthdate,
   formatLongDate,
@@ -12,7 +14,6 @@ import {
   formatShortDate,
   formatTimeRange,
 } from "../lib/format";
-import { doctorName, serviceName } from "../lib/mock";
 
 type Tab = "resumen" | "odontograma" | "plan" | "evolucion" | "turnos";
 
@@ -56,6 +57,13 @@ export function PacienteDetalle() {
   const tab: Tab = TABS.some((t) => t.id === rawTab) ? (rawTab as Tab) : "resumen";
   const setTab = (next: Tab) => setParams(next === "resumen" ? {} : { tab: next }, { replace: true });
   const { data, isLoading } = usePatient(id);
+  const { serviceName, doctorName } = useDirectory();
+  const patients = usePatients();
+  const services = useServices();
+  const doctors = useDoctors();
+  const createAppointment = useCreateAppointment();
+  const updatePatient = useUpdatePatient();
+  const [modal, setModal] = useState<"none" | "appt" | "edit">("none");
 
   if (isLoading) return <Loading />;
   if (!data?.patient) {
@@ -111,10 +119,10 @@ export function PacienteDetalle() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => setModal("edit")}>
               <Pencil size={16} /> Editar
             </Button>
-            <Button size="sm">
+            <Button size="sm" onClick={() => setModal("appt")}>
               <CalendarPlus size={16} /> Nuevo turno
             </Button>
           </div>
@@ -309,6 +317,42 @@ export function PacienteDetalle() {
           )}
         </Card>
       ) : null}
+
+      <Modal open={modal === "edit"} onClose={() => setModal("none")} title="Editar paciente">
+        <PatientForm
+          initial={p}
+          pending={updatePatient.isPending}
+          onCancel={() => setModal("none")}
+          onSubmit={(values) =>
+            updatePatient.mutate(
+              {
+                id: p.id,
+                input: {
+                  full_name: values.full_name,
+                  phone: values.phone,
+                  email: values.email,
+                  document: values.document,
+                  birthdate: values.birthdate,
+                  notes: values.notes,
+                },
+              },
+              { onSuccess: () => setModal("none") },
+            )
+          }
+        />
+      </Modal>
+
+      <Modal open={modal === "appt"} onClose={() => setModal("none")} title="Nuevo turno">
+        <AppointmentForm
+          patients={patients.data ?? []}
+          services={services.data ?? []}
+          doctors={doctors.data ?? []}
+          initialPatientId={p.id}
+          pending={createAppointment.isPending}
+          onCancel={() => setModal("none")}
+          onSubmit={(values) => createAppointment.mutate(values, { onSuccess: () => setModal("none") })}
+        />
+      </Modal>
     </div>
   );
 }

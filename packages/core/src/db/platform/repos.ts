@@ -213,3 +213,56 @@ export function domainsRepo(d1: D1Database) {
     },
   };
 }
+
+export type AuditActorType = "user" | "ai" | "system";
+
+export type AuditEntry = {
+  actorUserId: string | null;
+  actorType: AuditActorType;
+  clinicId: string | null;
+  action: string;
+  entity?: string | null;
+  entityId?: string | null;
+  conversationId?: string | null;
+  meta?: unknown;
+};
+
+export function auditRepo(d1: D1Database) {
+  return {
+    /**
+     * Registra una acción en `audit_log`. Nunca debe tumbar la operación que
+     * audita: si el insert falla, se traga el error.
+     */
+    async record(entry: AuditEntry): Promise<void> {
+      try {
+        await d1
+          .prepare(
+            "INSERT INTO audit_log (id, actor_user_id, actor_type, clinic_id, action, entity, entity_id, conversation_id, at, meta) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          )
+          .bind(
+            rowId(),
+            entry.actorUserId,
+            entry.actorType,
+            entry.clinicId,
+            entry.action,
+            entry.entity ?? null,
+            entry.entityId ?? null,
+            entry.conversationId ?? null,
+            Date.now(),
+            entry.meta === undefined ? null : JSON.stringify(entry.meta),
+          )
+          .run();
+      } catch {
+        // La auditoría no puede voltear la operación auditada.
+      }
+    },
+    async listByClinic(clinicId: string, limit = 50) {
+      const res = await d1
+        .prepare("SELECT * FROM audit_log WHERE clinic_id = ? ORDER BY at DESC LIMIT ?")
+        .bind(clinicId, limit)
+        .all<Record<string, unknown>>();
+      return res.results ?? [];
+    },
+  };
+}
+

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { can } from '@dental/core';
 import type { AppBindings } from '../env';
 import { requireTenant } from '../lib/request-context';
+import { patientBundle } from '../domain/services';
 
 const patientSchema = z.object({
   full_name: z.string().min(1),
@@ -21,6 +22,16 @@ patients.get('/', async (c) => {
   const { ctx, db } = tenant;
   if (!can(ctx, 'patients:read')) return c.json({ error: 'No tenés permiso.' }, 403);
   return c.json({ patients: await db.list('patients') });
+});
+
+patients.get('/:id/bundle', async (c) => {
+  const tenant = await requireTenant(c);
+  if (tenant instanceof Response) return tenant;
+  const { ctx, db } = tenant;
+  if (!can(ctx, 'patients:read')) return c.json({ error: 'No tenés permiso.' }, 403);
+  const bundle = await patientBundle(db, c.req.param('id'));
+  if (!bundle.patient) return c.json({ error: 'No encontrado.' }, 404);
+  return c.json(bundle);
 });
 
 patients.get('/:id', async (c) => {

@@ -135,25 +135,6 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
 
-  apps/site:
-    dependencies:
-      astro:
-        specifier: ^7.3.0
-        version: 7.3.5(@types/node@26.6.3)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)
-      lucide-astro:
-        specifier: ^0.545.0
-        version: 0.545.0(astro@7.3.5(@types/node@26.6.3)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
-    devDependencies:
-      '@tailwindcss/vite':
-        specifier: ^4.3.0
-        version: 4.3.3(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
-      tailwindcss:
-        specifier: ^4.3.0
-        version: 4.3.3
-      typescript:
-        specifier: ^5.7.0
-        version: 5.9.3
-
   packages/config:
     devDependencies:
       typescript:
@@ -3083,12 +3064,6 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
-
-  lucide-astro@0.545.0:
-    resolution: {integrity: sha512-KBSQTlW4e+tT6DvWEWcqxWa2WubWdqhLG7/WQgnAawQ29ZAEUfTqo2At9IW9xlrG1k8qrVwzeGQfeumiMsgI6Q==}
-    deprecated: 'Deprecated: Use `@lucide/astro`'
-    peerDependencies:
-      astro: '>=2.7.1'
 
   lucide-react@1.48.0:
     resolution: {integrity: sha512-R0CIKY/fXiC6y9xRBADgsK+VW2p/pcTJOMhLZf1T+uG+vJUvyUR02nGOgmIIC7MPkiNK4Ox8QDnbqF8rJYWPZQ==}
@@ -7075,10 +7050,6 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
-
-  lucide-astro@0.545.0(astro@7.3.5(@types/node@26.6.3)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)):
-    dependencies:
-      astro: 7.3.5(@types/node@26.6.3)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)
 
   lucide-react@1.48.0(react@19.3.0):
     dependencies:

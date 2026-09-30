@@ -1,14 +1,25 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import type { Service } from "@dental/contracts";
 import { Button, Card, Loading, PageHeader, cn, toneDot } from "../components/ui";
-import { useServices } from "../lib/queries";
+import { Modal, ServiceForm } from "../components/forms";
+import { useCreateService, useServices, useUpdateService } from "../lib/queries";
 import { formatMoney } from "../lib/format";
 
 export function Tratamientos() {
   const services = useServices();
+  const createService = useCreateService();
+  const updateService = useUpdateService();
   const [showInactive, setShowInactive] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Service | null>(null);
 
   const list = (services.data ?? []).filter((s) => showInactive || s.active);
+
+  const close = () => {
+    setOpen(false);
+    setEditing(null);
+  };
 
   return (
     <div>
@@ -16,11 +27,33 @@ export function Tratamientos() {
         title="Tratamientos"
         subtitle="Catálogo de servicios, duración y honorarios"
         actions={
-          <Button size="sm">
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditing(null);
+              setOpen(true);
+            }}
+          >
             <Plus size={16} /> Nuevo tratamiento
           </Button>
         }
       />
+
+      <Modal open={open} onClose={close} title={editing ? "Editar tratamiento" : "Nuevo tratamiento"}>
+        <ServiceForm
+          initial={editing}
+          pending={createService.isPending || updateService.isPending}
+          onCancel={close}
+          onSubmit={(values) => {
+            if (editing) {
+              updateService.mutate({ id: editing.id, input: values }, { onSuccess: close });
+            } else {
+              createService.mutate(values, { onSuccess: close });
+            }
+          }}
+        />
+      </Modal>
+
 
       <div className="mb-4 flex items-center gap-3">
         <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-muted">
@@ -65,6 +98,16 @@ export function Tratamientos() {
                   <span className="flex items-center gap-2">
                     <span className="size-3 rounded-full" style={{ backgroundColor: toneDot(s.color) }} />
                     <span className="text-xs text-muted">{s.active ? "Activo" : "Inactivo"}</span>
+                    <button
+                      type="button"
+                      className="ml-auto text-xs text-accent hover:underline"
+                      onClick={() => {
+                        setEditing(s);
+                        setOpen(true);
+                      }}
+                    >
+                      Editar
+                    </button>
                   </span>
                 </li>
               ))}

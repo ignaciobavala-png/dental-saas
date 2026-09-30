@@ -1,12 +1,14 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { stepCountIs, streamText } from 'ai';
+import { can } from '@dental/core';
 import type { AppBindings } from '../env';
 import { getSessionUser } from '../middleware/auth';
 import { requireTenant } from '../lib/request-context';
+import { auditFor } from '../lib/audit';
 import { buildInternalSystemPrompt } from '../ai/prompt';
 import { deepseekModel } from '../ai/provider';
-import { buildPublicTools } from '../ai/tools';
+import { buildStaffTools } from '../ai/tools';
 import { bookingService } from '../domain/services';
 
 const bodySchema = z.object({
@@ -32,7 +34,8 @@ export const asistente = new Hono<AppBindings>();
 asistente.get('/appointments', async (c) => {
   const tenant = await requireTenant(c);
   if (tenant instanceof Response) return tenant;
-  const { db } = tenant;
+  const { ctx, db } = tenant;
+  if (!can(ctx, 'appointments:read')) return c.json({ error: 'No tenés permiso.' }, 403);
   return c.json({ appointments: await bookingService.list(db) });
 });
 
@@ -54,8 +57,8 @@ asistente.post('/chat', async (c) => {
       model: deepseekModel(c.env),
       system: await buildInternalSystemPrompt(db, user.name),
       messages: parsed.data.messages,
-      tools: buildPublicTools(ctx, db),
-      stopWhen: stepCountIs(5),
+      tools: buildStaffTools(ctx, db, auditFor(c.env.DB, ctx)),
+      stopWhen: stepCountIs(8),
       providerOptions: { deepseek: { thinking: { type: 'disabled' } } },
     });
 

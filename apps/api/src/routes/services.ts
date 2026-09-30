@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { can } from '@dental/core';
 import type { AppBindings } from '../env';
 import { requireTenant } from '../lib/request-context';
+import { catalogService } from '../domain/services';
 
 const serviceSchema = z.object({
   code: z.string().nullable().optional(),
@@ -33,16 +34,15 @@ services.post('/', async (c) => {
   const parsed = serviceSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: 'Datos inválidos.' }, 400);
 
-  const row = await db.insert('services', {
+  const row = await catalogService.createService(db, {
     code: parsed.data.code ?? null,
     name: parsed.data.name,
     description: parsed.data.description ?? null,
-    duration_min: parsed.data.duration_min,
-    price_cents: parsed.data.price_cents ?? null,
-    color: parsed.data.color ?? 'sky',
-    active: parsed.data.active === false ? 0 : 1,
-    created_at: Date.now(),
-  } as never);
+    durationMin: parsed.data.duration_min,
+    priceCents: parsed.data.price_cents ?? null,
+    color: parsed.data.color,
+    active: parsed.data.active,
+  });
 
   return c.json({ service: row }, 201);
 });
@@ -56,9 +56,14 @@ services.put('/:id', async (c) => {
   const parsed = serviceSchema.partial().safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: 'Datos inválidos.' }, 400);
 
-  const patch: Record<string, unknown> = { ...parsed.data };
-  if (parsed.data.active !== undefined) patch.active = parsed.data.active ? 1 : 0;
-
-  const row = await db.update('services', c.req.param('id'), patch);
+  const row = await catalogService.updateService(db, c.req.param('id'), {
+    code: parsed.data.code,
+    name: parsed.data.name,
+    description: parsed.data.description,
+    durationMin: parsed.data.duration_min,
+    priceCents: parsed.data.price_cents,
+    color: parsed.data.color,
+    active: parsed.data.active,
+  });
   return c.json({ service: row });
 });
