@@ -4,6 +4,7 @@ export type PlatformUser = {
   password_hash: string | null;
   name: string;
   status: "active" | "invited" | "disabled";
+  is_platform_admin: number;
   created_at: number;
 };
 
@@ -17,6 +18,7 @@ export type PlatformClinic = {
   db_ref: string | null;
   created_at: number;
   trial_expires_at: number | null;
+  paid_until: number | null;
 };
 
 export type PlatformMembership = {
@@ -62,6 +64,7 @@ export function usersRepo(d1: D1Database) {
         password_hash: input.passwordHash,
         name: input.name,
         status: "active",
+        is_platform_admin: 0,
         created_at: Date.now(),
       };
       await d1
@@ -96,6 +99,7 @@ export function clinicsRepo(d1: D1Database) {
         db_ref: null,
         created_at: Date.now(),
         trial_expires_at: null,
+        paid_until: null,
       };
       await d1
         .prepare(
@@ -113,6 +117,42 @@ export function clinicsRepo(d1: D1Database) {
         )
         .run();
       return clinic;
+    },
+  };
+}
+
+export type PlatformClinicRow = PlatformClinic & { owner_name: string | null; owner_email: string | null };
+
+/** Operaciones del master de la plataforma: cruzan consultorios a propósito. */
+export function platformRepo(d1: D1Database) {
+  return {
+    async listClinics(): Promise<PlatformClinicRow[]> {
+      const res = await d1
+        .prepare(
+          `SELECT c.*, u.name AS owner_name, u.email AS owner_email
+             FROM clinics c
+             LEFT JOIN memberships m ON m.id = (
+               SELECT id FROM memberships WHERE clinic_id = c.id AND role = 'owner' ORDER BY created_at LIMIT 1)
+             LEFT JOIN users u ON u.id = m.user_id
+            ORDER BY c.created_at DESC`,
+        )
+        .all<PlatformClinicRow>();
+      return res.results ?? [];
+    },
+    async setTrial(clinicId: string, trialExpiresAt: number): Promise<void> {
+      await d1
+        .prepare("UPDATE clinics SET status = 'trial', trial_expires_at = ? WHERE id = ?")
+        .bind(trialExpiresAt, clinicId)
+        .run();
+    },
+    async setPaid(clinicId: string, paidUntil: number): Promise<void> {
+      await d1
+        .prepare("UPDATE clinics SET status = 'active', paid_until = ? WHERE id = ?")
+        .bind(paidUntil, clinicId)
+        .run();
+    },
+    async suspend(clinicId: string): Promise<void> {
+      await d1.prepare("UPDATE clinics SET status = 'suspended' WHERE id = ?").bind(clinicId).run();
     },
   };
 }

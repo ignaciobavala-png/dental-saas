@@ -158,3 +158,31 @@
   no recibe tráfico desde un sitio de marketing (ver A13).
 
 <!-- Agregar ADRs nuevos debajo de esta línea. -->
+
+### ADR-0011 — Alta abierta con email y contraseña; master de plataforma y cobro manual
+
+- **Fecha:** 2026-10-02
+- **Estado:** aceptada
+- **Contexto:** el piloto usaba un PIN compartido para habilitar altas. Es poco
+  estándar, no identifica a nadie y además había quedado expuesto en el formulario y
+  en la doc. Tampoco había forma de convertir una prueba en cuenta paga ni de
+  suspenderla sin tocar SQL.
+- **Decisión:** alta abierta con nombre, email y contraseña; prueba de 30 días
+  (`DEFAULT_TRIAL_DAYS`). Un usuario master (`users.is_platform_admin`, creado por
+  script) gestiona desde `/plataforma`: registrar pago (30 días por período),
+  extender prueba y suspender. La regla de acceso vive solo en `clinicAccess()`.
+- **Consecuencias:** sin verificación de email ni Turnstile cualquiera puede crear
+  consultorios; ambas cosas son requisito antes de abrir el alta al público. El cobro
+  es manual hasta integrar una pasarela.
+
+### ADR-0012 — Producción en Cloudflare (no Vercel)
+
+- **Fecha:** 2026-10-02
+- **Estado:** aceptada (deploy postergado)
+- **Contexto:** se evaluó mover el proyecto a Vercel para alinearlo con el stack
+  habitual (Next.js + Supabase).
+- **Decisión:** quedarse en Cloudflare. El código depende de D1 (SQLite, migraciones,
+  trigger anti doble-reserva), service bindings (ADR-0002), rate limit bindings y
+  tests en `workerd`; migrar implicaría reescribir la capa de datos sin beneficio
+  para el usuario.
+- **Consecuencias:** el deploy sigue el plan de `docs/16`. Fecha a definir.

@@ -6,24 +6,45 @@ repositorio de los pendientes para ponerlo frente a consultorios reales.
 ## Acceso piloto
 
 - El alta crea una clínica en estado `trial` y guarda `trial_expires_at`.
-- La duración es de 14 días por defecto. Se puede fijar `TRIAL_DAYS=7` para una
-  semana; valores vacíos o inválidos vuelven a 14.
-- `TRIAL_PIN` es obligatorio para crear consultorios. En el piloto local quedó
-  configurado como `adminadmin`; en producción se carga como secreto del Worker
-  (`wrangler secret put TRIAL_PIN`). El PIN nunca se envía al frontend ni se
-  guarda en D1.
-- Para probar localmente, declarar `TRIAL_PIN` y `TRIAL_DAYS` en
-  `apps/api/.dev.vars` (archivo local, no versionar). Para producción, configurar
-  el secreto `TRIAL_PIN` en Cloudflare y la variable `TRIAL_DAYS` en el entorno
-  del Worker antes de distribuir el código.
+- La duración es de **30 días** por defecto. `TRIAL_DAYS` acepta cualquier entero
+  entre 1 y 365; valores vacíos o inválidos vuelven a 30.
+- El alta es abierta: nombre, email, contraseña y nombre del consultorio. No hay
+  PIN (se reemplazó el 2026-10-02 por el alta estándar con email y contraseña).
+  Lo único que la frena es el rate limit de `AUTH_LIMIT` (10 por minuto por IP).
+- Pendiente antes de abrirla al público: **verificación de email** y Turnstile en
+  el alta. Sin eso, cualquiera puede crear consultorios (y landings públicas con
+  secretaría IA, que consume tokens) con emails ajenos.
 - Al vencer una prueba en estado `trial`, se bloquean el panel, la landing pública
   y el chat/API públicos. La UI informa cómo continuar. La cuenta y sus datos no
-  se borran. Un operador todavía tiene que convertir manualmente la clínica a
-  `active` cuando acuerde continuar.
-- Es un PIN compartido y reutilizable: sirve para un grupo pequeño de pilotos,
-  no identifica quién invitó a cada consultorio ni limita la cantidad de altas.
-  Si hace falta controlar cupos o revocar invitaciones individualmente, crear
-  invitaciones de un solo uso antes de ampliar la prueba.
+  se borran. El master la reactiva registrando un pago desde `/plataforma`.
+
+## Usuario master y ciclo de pago
+
+Hay un único rol por encima de los consultorios: el **master** de la plataforma
+(`users.is_platform_admin = 1`). No se crea desde la UI; se crea con un script:
+
+```bash
+pnpm --filter @dental/api admin:create --email vos@dominio.com --name "Nombre"            # D1 local
+pnpm --filter @dental/api admin:create --email vos@dominio.com --name "Nombre" --remote   # producción
+```
+
+El master entra por el mismo `/login` y cae en `/plataforma`, que lista todos los
+consultorios con su dueño, su estado y su vencimiento. Desde ahí puede:
+
+- **Registrar pago**: pasa el consultorio a `active` y extiende `paid_until` 30 días
+  desde el vencimiento vigente (o desde hoy si ya venció). Sirve también para
+  reactivar uno suspendido.
+- **+7 días de prueba**: extiende la prueba (o la reabre si estaba vencida).
+- **Suspender**: bloquea panel, landing y secretaría hasta el próximo pago.
+
+Ciclo: prueba de 30 días → al vencer queda bloqueado → el master registra el pago
+(30 días) → al vencer `paid_until` sin un pago nuevo vuelve a quedar bloqueado. El
+cobro en sí sigue siendo manual (no hay pasarela). Cada acción queda en `audit_log`
+(`platform.*`).
+
+La regla "¿este consultorio puede operar?" vive en un solo lugar:
+`clinicAccess()` en `packages/core/src/billing/access.ts`. Panel, landing,
+secretaría y `/me` la usan; no repetir la condición a mano.
 
 La migración `0004_trial_expiration.sql` debe aplicarse junto con el resto de las
 migraciones D1. Las altas existentes antes de la migración conservan su estado y
@@ -52,7 +73,7 @@ configurado, un error de API ahora falla el render en vez de publicar la clínic
 - Secretaria pública conectada a herramientas del backend y flujo de consulta/reserva.
 - Editor básico para datos del consultorio, horarios, coberturas, FAQ y opiniones.
 - Plantilla responsive de landing con secciones condicionales y CTA a chat/WhatsApp.
-- PIN de invitación compartido y vencimiento de prueba configurable.
+- Alta con email y contraseña, prueba de 30 días y consola del master.
 
 ### Sigue siendo necesario antes de venderlo como producto terminado
 

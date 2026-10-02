@@ -12,6 +12,7 @@ import { services } from './routes/services';
 import { patients } from './routes/patients';
 import { appointments } from './routes/appointments';
 import { clinical } from './routes/clinical';
+import { platform } from './routes/platform';
 
 const app = new Hono<AppBindings>();
 
@@ -66,6 +67,7 @@ app.use('/api/*', async (c, next) => {
 app.get('/api/health', (c) => c.json({ ok: true }));
 
 app.route('/api/auth', auth);
+app.route('/api/platform', platform);
 app.route('/api/public', publicRoutes);
 app.route('/api/clinic', clinic);
 app.route('/api/doctors', doctors);

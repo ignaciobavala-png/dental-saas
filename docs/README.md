@@ -25,12 +25,17 @@ que está acá es greenfield.
 | [10 — Seguridad](10-seguridad.md) | Sesiones, CSRF, secrets, rate limit, headers, auditoría |
 | [11 — Onboarding y provisioning](11-onboarding-provisioning.md) | Alta de consultorio, seed, publicación, invitaciones |
 | [12 — Deploy, dominios y costos](12-deploy-dominios-costos.md) | Recursos Cloudflare, entornos, dominios, límites, costos |
-| [14 — Producto y piloto](14-producto-y-piloto.md) | Estado para consultorios, PIN compartido y vencimiento de la prueba |
+| [14 — Producto y piloto](14-producto-y-piloto.md) | Estado para consultorios, alta, prueba de 30 días, master y pagos |
 | [16 — Auditoría y puesta en marcha](16-auditoria-y-puesta-en-marcha.md) | Checklist funcional actual, pruebas locales y pasos para publicar |
 
 ## Estado
 
 - **Fase:** piloto funcional local.
+- **Pantallas:** dos. El **panel** (`dental-api`, entra por `/login`) y la **landing
+  de cada consultorio** (`dental-landing`, `/c/:slug`). La raíz de la landing
+  redirige al login del panel. El sitio de marketing del SaaS (`apps/site`) se
+  eliminó para simplificar el MVP. El master de la plataforma usa el mismo panel
+  en `/plataforma` (ver [14](14-producto-y-piloto.md)).
 - **Repo:** monorepo TypeScript con API/Worker, panel React y landing Astro.
 - **Decisiones estructurales:** resueltas para piloto; quedan decisiones comerciales
   antes de vender a escala.

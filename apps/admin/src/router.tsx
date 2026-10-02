@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
-import { RequireAuth } from "./components/RequireAuth";
+import { RequireAuth, RequirePlatformAdmin } from "./components/RequireAuth";
 import { Login } from "./routes/Login";
 import { Hoy } from "./routes/Hoy";
 import { Agenda } from "./routes/Agenda";
@@ -10,10 +10,12 @@ import { Profesionales } from "./routes/Profesionales";
 import { Tratamientos } from "./routes/Tratamientos";
 import { Landing } from "./routes/Landing";
 import { Configuracion } from "./routes/Configuracion";
+import { Plataforma } from "./routes/Plataforma";
 import { EmptyState } from "./components/ui";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <Login /> },
+  { path: "/plataforma", element: <RequirePlatformAdmin />, children: [{ index: true, element: <Plataforma /> }] },
   {
     element: <RequireAuth />,
     children: [

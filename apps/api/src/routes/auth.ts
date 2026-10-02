@@ -2,12 +2,15 @@ import { Hono } from 'hono';
 import { setCookie, deleteCookie, getCookie } from 'hono/cookie';
 import { z } from 'zod';
 import {
+  clinicAccess,
   clinicsRepo,
+  daysFromNow,
   createSession,
   destroySessionToken,
   hashPassword,
   membershipsRepo,
   SESSION_COOKIE,
+  trialDaysFrom,
   usersRepo,
   verifyPassword,
 } from '@dental/core';
@@ -29,7 +32,6 @@ const signupSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8),
   clinicName: z.string().min(1),
-  trialPin: z.string().optional(),
 });
 
 const loginSchema = z.object({
@@ -56,10 +58,7 @@ async function setSessionCookie(c: import('hono').Context<AppBindings>, token: s
 auth.post('/signup', async (c) => {
   const parsed = signupSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: 'Datos inválidos.' }, 400);
-  const { name, email, password, clinicName, trialPin } = parsed.data;
-  if (!c.env.TRIAL_PIN || trialPin !== c.env.TRIAL_PIN) {
-    return c.json({ error: 'El PIN de acceso no es válido.' }, 403);
-  }
+  const { name, email, password, clinicName } = parsed.data;
 
   const users = usersRepo(c.env.DB);
   if (await users.byEmail(email)) {
@@ -73,7 +72,7 @@ auth.post('/signup', async (c) => {
   const user = { id: crypto.randomUUID(), name, email };
   const clinic = { id: crypto.randomUUID(), name: clinicName, slug };
   const now = Date.now();
-  const trialExpiresAt = now + (c.env.TRIAL_DAYS === '7' ? 7 : 14) * 86_400_000;
+  const trialExpiresAt = daysFromNow(trialDaysFrom(c.env.TRIAL_DAYS), now);
   const content = {
     name: clinicName,
     openingHours: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, openMin: 540, closeMin: 1140 })),
@@ -128,11 +127,11 @@ auth.get('/me', async (c) => {
   const withClinic = await Promise.all(
     memberships.map(async (m) => {
       const clinic = await clinics.byId(m.clinic_id);
-      return { ...m, clinic: clinic ? { ...clinic, trialExpiresAt: clinic.trial_expires_at, publicUrl: c.env.PUBLIC_LANDING_URL ? `${c.env.PUBLIC_LANDING_URL.replace(/\/$/, '')}/c/${clinic.slug}` : null } : null };
+      return { ...m, clinic: clinic ? { ...clinic, trialExpiresAt: clinic.trial_expires_at, paidUntil: clinic.paid_until, access: clinicAccess(clinic), publicUrl: c.env.PUBLIC_LANDING_URL ? `${c.env.PUBLIC_LANDING_URL.replace(/\/$/, '')}/c/${clinic.slug}` : null } : null };
     }),
   );
   return c.json({
-    user: { id: user.id, name: user.name, email: user.email },
+    user: { id: user.id, name: user.name, email: user.email, isPlatformAdmin: user.is_platform_admin === 1 },
     memberships: withClinic,
   });
 });

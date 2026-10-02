@@ -27,7 +27,6 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [clinicName, setClinicName] = useState("");
-  const [trialPin, setTrialPin] = useState("");
   const navigate = useNavigate();
 
   const login = useLogin();
@@ -41,7 +40,7 @@ export function Login() {
       if (mode === "login") {
         await login.mutateAsync({ email, password });
       } else {
-        await signup.mutateAsync({ name, email, password, clinicName, trialPin: trialPin || undefined });
+        await signup.mutateAsync({ name, email, password, clinicName });
       }
       navigate("/", { replace: true });
     } catch {
@@ -58,13 +57,13 @@ export function Login() {
           El panel operativo del consultorio.
         </h1>
         <p className="mt-5 max-w-lg text-base leading-relaxed text-muted">
-          Agenda, pacientes, landing pública y recepción virtual en un solo lugar. El primer acceso se activa con un PIN y después se entra con email y contraseña.
+          Agenda, pacientes, landing pública y recepción virtual en un solo lugar. Creá tu cuenta con email y contraseña y probalo gratis durante 30 días.
         </p>
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-line bg-panel p-4">
             <KeyRound size={18} className="text-accent" />
-            <p className="mt-3 text-sm font-semibold text-ink">Activación con PIN</p>
-            <p className="mt-1 text-xs leading-relaxed text-muted">Usalo una vez para crear el consultorio de prueba.</p>
+            <p className="mt-3 text-sm font-semibold text-ink">30 días gratis</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted">Sin tarjeta. Al terminar, seguís con el plan pago.</p>
           </div>
           <div className="rounded-xl border border-line bg-panel p-4">
             <ShieldCheck size={18} className="text-accent" />
@@ -83,7 +82,7 @@ export function Login() {
           <p className="mt-2 text-sm text-muted">
             {mode === "login"
               ? "Usá el email y contraseña que creaste al activar la prueba."
-              : "El PIN habilita la prueba. Después vas a entrar con tu email y contraseña."}
+              : "Con este email y contraseña vas a entrar al panel."}
           </p>
         </div>
 
@@ -129,16 +128,8 @@ export function Login() {
                 required
                 placeholder="Ej. Odontología Arocena"
               />
-              <Field
-                label="PIN de activación de la prueba"
-                required
-                value={trialPin}
-                onChange={(e) => setTrialPin(e.target.value)}
-                autoComplete="one-time-code"
-                placeholder="Ej. adminadmin"
-              />
               <p className="rounded-lg bg-soft px-3 py-2 text-xs leading-relaxed text-muted">
-                El acceso de prueba empieza al crear la cuenta. No pedimos datos de pago.
+                La prueba gratuita dura 30 días desde que creás la cuenta. No pedimos datos de pago.
               </p>
             </>
           ) : null}

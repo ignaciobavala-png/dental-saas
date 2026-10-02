@@ -16,12 +16,14 @@ import {
   fetchMe,
   fetchPatientBundle,
   fetchPatients,
+  fetchPlatformClinics,
   fetchRecalls,
   fetchServices,
   fetchWaiting,
   login as apiLogin,
   logout as apiLogout,
   recordToothCondition,
+  runPlatformAction,
   saveClinicSettings,
   signup as apiSignup,
   updateAppointment,
@@ -547,6 +549,18 @@ export function useSaveSettings() {
 
 export function useMe() {
   return useQuery({ queryKey: ["me"], queryFn: fetchMe, retry: false });
+}
+
+export function usePlatformClinics() {
+  return useQuery({ queryKey: ["platform-clinics"], queryFn: fetchPlatformClinics });
+}
+
+export function usePlatformAction() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: runPlatformAction,
+    onSuccess: () => client.invalidateQueries({ queryKey: ["platform-clinics"] }),
+  });
 }
 
 export function useLogin() {

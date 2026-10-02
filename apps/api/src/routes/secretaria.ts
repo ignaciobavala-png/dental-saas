@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { stepCountIs, streamText } from 'ai';
-import { clinicsRepo, createTenantContext, TenantDb, type TenantContext } from '@dental/core';
+import { clinicAccess, clinicsRepo, createTenantContext, TenantDb, type TenantContext } from '@dental/core';
 import type { AppBindings } from '../env';
 import { buildPublicSystemPrompt } from '../ai/prompt';
 import { deepseekModel } from '../ai/provider';
@@ -32,7 +32,7 @@ async function resolvePublicContext(c: import('hono').Context<AppBindings>): Pro
   const slug = c.req.query('clinic');
   if (!slug) return null;
   const clinic = await clinicsRepo(c.env.DB).bySlug(slug);
-  if (!clinic || clinic.status === 'suspended' || (clinic.status === 'trial' && clinic.trial_expires_at != null && clinic.trial_expires_at <= Date.now())) return null;
+  if (!clinic || clinicAccess(clinic) !== 'ok') return null;
   return createTenantContext({ clinicId: clinic.id, userId: null, role: 'visitor' });
 }
 

@@ -8,6 +8,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  ShieldCheck,
   Stethoscope,
   Users,
   X,
@@ -81,6 +82,16 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             {item.label}
           </NavLink>
         ))}
+        {user?.isPlatformAdmin ? (
+          <NavLink
+            to="/plataforma"
+            onClick={onNavigate}
+            className="mt-auto flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink"
+          >
+            <ShieldCheck size={18} />
+            Plataforma
+          </NavLink>
+        ) : null}
       </nav>
 
       <div className="m-3 rounded-xl bg-soft p-3">
@@ -165,9 +176,9 @@ export function AppShell() {
         <main className="mx-auto max-w-6xl px-4 py-6 lg:px-8">
           {clinic?.status === "trial" && trialDays !== null ? (
             <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-              <strong>Acceso piloto</strong>
-              <span className="ml-2">{trialDays === 0 ? "La prueba termina hoy." : `Quedan ${trialDays} ${trialDays === 1 ? "día" : "días"}.`}</span>
-              <span className="ml-1 text-amber-900/80">Contactanos para coordinar la continuidad.</span>
+              <strong>Prueba gratuita</strong>
+              <span className="ml-2">{trialDays === 0 ? "Termina hoy." : `Quedan ${trialDays} ${trialDays === 1 ? "día" : "días"}.`}</span>
+              <span className="ml-1 text-amber-900/80">Al terminar, la cuenta se suspende hasta registrar el pago.</span>
             </div>
           ) : null}
           <Outlet />

@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { clinicsRepo, createTenantContext, TenantDb } from '@dental/core';
+import { clinicAccess, clinicsRepo, createTenantContext, TenantDb } from '@dental/core';
 import type { AppBindings } from '../env';
 import { catalogService, getClinicSettings } from '../domain/services';
 
@@ -17,7 +17,7 @@ export const publicRoutes = new Hono<AppBindings>();
 publicRoutes.get('/clinic/:slug', async (c) => {
   const slug = c.req.param('slug');
   const clinic = await clinicsRepo(c.env.DB).bySlug(slug);
-  if (!clinic || clinic.status === 'suspended' || (clinic.status === 'trial' && clinic.trial_expires_at != null && clinic.trial_expires_at <= Date.now())) {
+  if (!clinic || clinicAccess(clinic) !== 'ok') {
     return c.json({ error: 'Consultorio no encontrado.' }, 404);
   }
 

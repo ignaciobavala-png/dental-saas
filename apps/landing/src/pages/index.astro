@@ -1,5 +1,8 @@
 ---
-import '../styles/global.css';
+import { env } from 'cloudflare:workers';
+
+// La raíz no es una página: cada consultorio vive en /c/:slug. Quien entra
+// sin slug es alguien del consultorio, así que va directo al login del panel.
+const panel = (env.PANEL_URL ?? 'http://127.0.0.1:8787').replace(/\/$/, '');
+return Astro.redirect(`${panel}/login`, 302);
 ---
-<!doctype html><html lang="es-AR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width"/><title>Consultorios</title><meta name="robots" content="noindex"/></head>
-<body class="bg-bone text-ink"><main class="mx-auto max-w-xl px-6 py-24"><h1 class="text-3xl font-semibold">La web de tu consultorio</h1><p class="mt-5">Ingresá al enlace que te compartió tu consultorio para consultar información y solicitar un turno.</p></main></body></html>

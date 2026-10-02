@@ -8,9 +8,7 @@ export type Env = {
   DEEPSEEK_MODEL?: string;
   ALLOWED_ORIGIN?: string;
   SESSION_SECRET?: string;
-  /** Optional shared invite PIN for controlled pilot signups. */
-  TRIAL_PIN?: string;
-  /** Pilot duration in days; defaults to 14. */
+  /** Trial duration in days (1–365); defaults to 30. */
   TRIAL_DAYS?: string;
 };
 

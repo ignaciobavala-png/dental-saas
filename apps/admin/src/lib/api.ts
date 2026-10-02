@@ -16,14 +16,24 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export type SessionUser = { id: string; name: string; email: string };
+export type SessionUser = { id: string; name: string; email: string; isPlatformAdmin?: boolean };
+export type ClinicAccess = "ok" | "trial_expired" | "payment_due" | "suspended";
 export type Membership = {
   id: string;
   user_id: string;
   clinic_id: string;
   role: "owner" | "admin" | "dentist" | "receptionist";
   status: string;
-  clinic: { id: string; name: string; slug: string; status?: string; publicUrl?: string | null; trialExpiresAt?: number | null } | null;
+  clinic: {
+    id: string;
+    name: string;
+    slug: string;
+    status?: string;
+    access?: ClinicAccess;
+    publicUrl?: string | null;
+    trialExpiresAt?: number | null;
+    paidUntil?: number | null;
+  } | null;
 };
 
 export async function fetchMe(): Promise<{ user: SessionUser | null; memberships: Membership[] }> {
@@ -39,13 +49,42 @@ export async function signup(input: {
   email: string;
   password: string;
   clinicName: string;
-  trialPin?: string;
 }): Promise<{ user: SessionUser; clinic: { id: string; slug: string; name: string } }> {
   return request("/api/auth/signup", { method: "POST", body: JSON.stringify(input) });
 }
 
 export async function logout(): Promise<void> {
   await request("/api/auth/logout", { method: "POST" });
+}
+
+/* ------------------------------ Master (plataforma) ------------------------------ */
+
+export type PlatformClinicDto = {
+  id: string;
+  name: string;
+  slug: string;
+  status: "trial" | "active" | "suspended";
+  access: ClinicAccess;
+  trialExpiresAt: number | null;
+  paidUntil: number | null;
+  createdAt: number;
+  ownerName: string | null;
+  ownerEmail: string | null;
+};
+
+export async function fetchPlatformClinics(): Promise<PlatformClinicDto[]> {
+  const { clinics } = await request<{ clinics: PlatformClinicDto[] }>("/api/platform/clinics");
+  return clinics;
+}
+
+export type PlatformAction =
+  | { kind: "trial"; clinicId: string; days: number }
+  | { kind: "payment"; clinicId: string; periods: number }
+  | { kind: "suspend"; clinicId: string };
+
+export async function runPlatformAction(action: PlatformAction): Promise<void> {
+  const body = action.kind === "trial" ? { days: action.days } : action.kind === "payment" ? { periods: action.periods } : {};
+  await request(`/api/platform/clinics/${action.clinicId}/${action.kind}`, { method: "POST", body: JSON.stringify(body) });
 }
 
 export type DoctorDto = {
