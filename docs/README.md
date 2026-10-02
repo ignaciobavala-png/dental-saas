@@ -27,6 +27,7 @@ que está acá es greenfield.
 | [12 — Deploy, dominios y costos](12-deploy-dominios-costos.md) | Recursos Cloudflare, entornos, dominios, límites, costos |
 | [14 — Producto y piloto](14-producto-y-piloto.md) | Estado para consultorios, alta, prueba de 30 días, master y pagos |
 | [16 — Auditoría y puesta en marcha](16-auditoria-y-puesta-en-marcha.md) | Checklist funcional actual, pruebas locales y pasos para publicar |
+| [17 — Auditoría de producción](17-auditoria-produccion.md) | Qué tan listos estamos para salir: bloqueantes, riesgos y orden sugerido |
 
 ## Estado
 
