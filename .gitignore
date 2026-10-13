@@ -9,3 +9,6 @@ dist/
 !.env.example
 *.log
 .DS_Store
+
+# Lo regenera el hook de brain-data en cada sesión (lleva el perfil personal del dev)
+AGENTS.md

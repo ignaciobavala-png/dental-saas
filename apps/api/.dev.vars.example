@@ -1,0 +1,6 @@
+# Copiar a apps/api/.dev.vars (ese archivo está ignorado por git) y completar.
+DEEPSEEK_API_KEY=
+# Opcional. Si falta, se usa el modelo por defecto del código.
+# DEEPSEEK_MODEL=
+# URL de la landing en local, para el link "ver mi página" del panel.
+PUBLIC_LANDING_URL=http://127.0.0.1:4321

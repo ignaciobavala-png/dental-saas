@@ -7,7 +7,6 @@ export type Env = {
   DEEPSEEK_API_KEY: string;
   DEEPSEEK_MODEL?: string;
   ALLOWED_ORIGIN?: string;
-  SESSION_SECRET?: string;
   /** Trial duration in days (1–365); defaults to 30. */
   TRIAL_DAYS?: string;
 };

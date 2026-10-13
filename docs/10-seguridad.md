@@ -53,7 +53,7 @@ entre clínicas. Acá va el resto de la superficie de seguridad.
 ## 6. Secretos y configuración
 
 - Secretos de Workers (`wrangler secret put` / secrets store): `DEEPSEEK_API_KEY`,
-  `TURNSTILE_SECRET`, `SESSION_SECRET`, credenciales de email.
+  `TURNSTILE_SECRET`, credenciales de email.
 - Nunca en el repo, nunca en el bundle cliente, nunca en `wrangler.jsonc` versionado.
 - Rotación documentada; verificar con `secret list` que el secret se cargó (un
   `secret put` por pipe sin TTY puede no guardar nada sin error visible).

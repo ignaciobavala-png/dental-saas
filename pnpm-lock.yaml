@@ -134,6 +134,9 @@ importers:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
+      wrangler:
+        specifier: ^4.141.0
+        version: 4.141.0(@cloudflare/workers-types@5.20260927.1)(@types/node@26.6.3)
 
   packages/config:
     devDependencies:

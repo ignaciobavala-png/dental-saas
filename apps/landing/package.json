@@ -7,7 +7,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "typecheck": "astro check",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "deploy": "astro build && wrangler deploy"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.0",
@@ -19,6 +20,7 @@
     "@astrojs/check": "^0.9.10",
     "@tailwindcss/vite": "^4.3.0",
     "tailwindcss": "^4.3.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "wrangler": "^4.141.0"
   }
 }

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Crea (o promueve) el usuario master de la plataforma en D1.
 //
-//   pnpm --filter @dental/api admin:create --email vos@dominio.com --name "Ignacio"            # D1 local
-//   pnpm --filter @dental/api admin:create --email vos@dominio.com --name "Ignacio" --remote   # producción
+//   pnpm --filter @dental/api admin:create --email vos@dominio.com --name "Tu Nombre"            # D1 local
+//   pnpm --filter @dental/api admin:create --email vos@dominio.com --name "Tu Nombre" --remote   # producción
 //
 // La contraseña se pide por consola (o PLATFORM_ADMIN_PASSWORD) para que no quede
 // en el historial. Si el email ya existe, solo se lo marca como master y se

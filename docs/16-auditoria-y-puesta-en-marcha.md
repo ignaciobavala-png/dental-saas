@@ -65,7 +65,7 @@ Sí falta publicar en Cloudflare. El plan preparado es:
 1. Crear una D1 llamada `dental-saas`.
 2. Reemplazar el `database_id` placeholder en `apps/api/wrangler.jsonc`.
 3. Aplicar migraciones D1 desde `packages/core/src/db/migrations`.
-4. Cargar secretos del Worker API: `DEEPSEEK_API_KEY` y `SESSION_SECRET`.
+4. Cargar secretos del Worker API: `DEEPSEEK_API_KEY`.
 5. Configurar variables: `TRIAL_DAYS` (opcional, default 30), `PUBLIC_LANDING_URL` y
    `ALLOWED_ORIGIN` en `dental-api`; `PANEL_URL` en `dental-landing` (la raíz de la
    landing redirige a `PANEL_URL/login`).

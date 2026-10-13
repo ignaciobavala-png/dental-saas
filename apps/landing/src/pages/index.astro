@@ -3,6 +3,12 @@ import { env } from 'cloudflare:workers';
 
 // La raíz no es una página: cada consultorio vive en /c/:slug. Quien entra
 // sin slug es alguien del consultorio, así que va directo al login del panel.
-const panel = (env.PANEL_URL ?? 'http://127.0.0.1:8787').replace(/\/$/, '');
-return Astro.redirect(`${panel}/login`, 302);
+// Sin PANEL_URL no hay a dónde mandarlo: se avisa en vez de redirigir a un
+// localhost que en producción no existe.
+const configured = env.PANEL_URL?.trim();
+const panel = configured || (import.meta.env.DEV ? 'http://127.0.0.1:8787' : '');
+if (!panel) {
+  return new Response('Falta configurar PANEL_URL en el Worker dental-landing (ver README).', { status: 500 });
+}
+return Astro.redirect(`${panel.replace(/\/$/, '')}/login`, 302);
 ---
