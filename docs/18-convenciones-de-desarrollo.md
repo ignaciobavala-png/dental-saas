@@ -1,4 +1,4 @@
-# AGENTS.md — SaaS Dental
+# Convenciones de desarrollo — SaaS Dental
 
 ## Qué es
 
@@ -9,8 +9,9 @@ y [`docs/02-multi-tenancy.md`](docs/02-multi-tenancy.md) antes de escribir códi
 
 ## Estado
 
-Repo en fase de diseño: por ahora solo existe `docs/`. La implementación arranca por
-`H0` (ver [`docs/07-roadmap.md`](docs/07-roadmap.md)).
+Piloto funcional: alta de consultorios, landing pública, secretaría IA con reservas,
+panel con agenda, pacientes e historia clínica, y consola de plataforma. Lo que falta
+para producción está en [`docs/17`](17-auditoria-produccion.md).
 
 ## Stack
 
@@ -41,17 +42,18 @@ Repo en fase de diseño: por ahora solo existe `docs/`. La implementación arran
 5. **El agente no supera a su usuario**: las tools se filtran por `can(ctx, cap)`.
 6. **Aislamiento y autorización son cosas distintas** y se aplican las dos.
 
-## Comandos (una vez generado el monorepo)
+## Comandos
 
 ```bash
 pnpm install
-pnpm dev              # levanta las apps
+pnpm dev                         # levanta las apps
 pnpm -r typecheck
-pnpm -r lint
-pnpm -r test          # Vitest + @cloudflare/vitest-plugin
-pnpm -r build
-pnpm --filter api deploy
+pnpm --filter @dental/api test   # Vitest + @cloudflare/vitest-plugin
+pnpm build
+pnpm --filter @dental/api run deploy   # "run": pnpm deploy a secas es otro comando
 ```
+
+El despliegue completo (D1, secrets, URLs) está en el [`README`](../README.md).
 
 ## Testing
 
@@ -68,13 +70,7 @@ pnpm --filter api deploy
 - No subir binarios pesados al repo: imágenes/videos van a R2.
 - Cada decisión de arquitectura nueva se registra como ADR en `docs/08`.
 
-## Referencias (brain-data)
+## Referencias
 
 - Dominio dental: **OpenDental** y **OpenDentist** (clawnify/OpenDentist, MIT) — solo
-  referencia de modelo y UI, no se forkearon (ver ADR-0006).
-- Aislamiento y RLS: `supabase-postgres-best-practices` (conceptos aplicables).
-- Cloudflare: `cloudflare-wrangler-deploy`, `cloudflare-d1-migrations`,
-  `cloudflare-email-routing-send-email`, `astro-cloudflare-imageservice-runtime`.
-- Agentes de IA: `ai-sdk-chatbot-grounded`, `agente-ia-operaciones-vs-escrituras`.
-- Landing/diseño: `criterio-visual-frontend`, `landing-conversion-sin-framework`.
-- Testing: `playwright-e2e-delivery`, `auditoria-responsive-chrome-headless`.
+  referencia de modelo y UI, no se forkearon (ver ADR-0006 en `docs/08`).
