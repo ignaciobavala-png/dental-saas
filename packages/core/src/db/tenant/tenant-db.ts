@@ -17,6 +17,14 @@ function rowId(): string {
   return crypto.randomUUID();
 }
 
+/** La fila no existe en este consultorio (o es de otro): la API la traduce a 404. */
+export class NotFoundError extends Error {
+  constructor(message = "No encontrado.") {
+    super(message);
+    this.name = "NotFoundError";
+  }
+}
+
 export class TenantDb {
   constructor(
     private readonly ctx: TenantContext,
@@ -79,6 +87,12 @@ export class TenantDb {
     delete (payload as Record<string, unknown>).clinic_id;
     delete (payload as Record<string, unknown>)[def.pk];
     const cols = Object.keys(payload);
+    if (cols.length === 0) {
+      // Nada que cambiar: un UPDATE sin SET es SQL inválido.
+      const current = await this.get<T>(table, id);
+      if (!current) throw new NotFoundError(`update ${table}/${id} not found`);
+      return current;
+    }
     const sets = cols.map((c) => `${c} = ?`).join(", ");
     const idCol = def.pk;
     const sql =
@@ -90,7 +104,7 @@ export class TenantDb {
         ? [...cols.map((c) => (payload as Record<string, unknown>)[c]), this.ctx.clinicId]
         : [...cols.map((c) => (payload as Record<string, unknown>)[c]), id, this.ctx.clinicId];
     const row = await this.d1.prepare(sql).bind(...args).first<T>();
-    if (!row) throw new Error(`update ${table}/${id} not found`);
+    if (!row) throw new NotFoundError(`update ${table}/${id} not found`);
     return row;
   }
 

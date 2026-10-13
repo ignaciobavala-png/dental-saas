@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
+import { NotFoundError } from '@dental/core';
 import type { AppBindings } from './env';
 import { secretaria } from './routes/secretaria';
 import { asistente } from './routes/asistente';
@@ -77,6 +78,12 @@ app.route('/api/appointments', appointments);
 app.route('/api/secretaria', secretaria);
 app.route('/api/asistente', asistente);
 app.route('/api', clinical);
+
+app.onError((error, c) => {
+  if (error instanceof NotFoundError) return c.json({ error: 'No encontrado.' }, 404);
+  console.error(error);
+  return c.json({ error: 'Error interno.' }, 500);
+});
 
 app.notFound((c) => c.req.path.startsWith('/api/')
   ? c.json({ error: 'Ruta inexistente.' }, 404)
