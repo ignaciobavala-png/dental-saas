@@ -28,6 +28,7 @@ que está acá es greenfield.
 | [14 — Producto y piloto](14-producto-y-piloto.md) | Estado para consultorios, alta, prueba de 30 días, master y pagos |
 | [16 — Auditoría y puesta en marcha](16-auditoria-y-puesta-en-marcha.md) | Checklist funcional actual, pruebas locales y pasos para publicar |
 | [17 — Auditoría de producción](17-auditoria-produccion.md) | Qué tan listos estamos para salir: bloqueantes, riesgos y orden sugerido |
+| [18 — Convenciones de desarrollo](18-convenciones-de-desarrollo.md) | Reglas del código del proyecto (para humanos y agentes) |
 
 ## Estado
 

@@ -97,6 +97,9 @@ para `receptionist`, o una capability propia?
 oficial de DeepSeek (`deepseek-chat` / `deepseek-reasoner`). Si el deploy no setea
 `DEEPSEEK_MODEL`, el chat falla. Verificar contra la API o cambiar el default.
 
+> **Resuelto (2026-10-12):** `deepseek-flash` figura en la lista oficial de modelos de DeepSeek
+> (junto con `deepseek-v4-pro`); `deepseek-chat` y `deepseek-reasoner` ya no son los ids vigentes.
+
 **M6. `database_id` de D1 es placeholder.**
 `apps/api/wrangler.jsonc` tiene `00000000-...`. Antes de deployar hay que
 reemplazarlo por el id real (el build no falla, el deploy sí o apunta a nada).
