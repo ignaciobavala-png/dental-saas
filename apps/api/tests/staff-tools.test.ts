@@ -4,7 +4,7 @@ import { createTenantContext, TenantDb, type ClinicRole } from '@dental/core';
 import type { Env } from '../src/env';
 import { bookAppointmentInput, buildStaffTools, createPatientInput } from '../src/ai/tools';
 import { availabilityService, bookingService, catalogService, clinicService, patientsService } from '../src/domain/services';
-import { seedDemoClinic } from './helpers';
+import { seedDemoClinic, WEEK } from './helpers';
 
 const env = rawEnv as unknown as Env;
 
@@ -114,8 +114,8 @@ describe('copiloto interno — operaciones de mostrador', () => {
     const patient = await patientsService.create(db, { fullName: 'Ana Gómez' });
     const [slot] = await availabilityService.slots(db, {
       serviceId,
-      dateFrom: '2026-10-05',
-      dateTo: '2026-10-11',
+      dateFrom: WEEK.dateFrom,
+      dateTo: WEEK.dateTo,
     });
 
     const booking = await bookingService.create(db, {
@@ -128,7 +128,7 @@ describe('copiloto interno — operaciones de mostrador', () => {
     expect(booking.patientId).toBe(patient.id);
     expect(booking.status).toBe('confirmed');
 
-    const agenda = await bookingService.agenda(db, { dateFrom: '2026-10-05', dateTo: '2026-10-11' });
+    const agenda = await bookingService.agenda(db, { dateFrom: WEEK.dateFrom, dateTo: WEEK.dateTo });
     const item = agenda.find((a) => a.id === booking.id);
     expect(item?.patientName).toBe('Ana Gómez');
     expect(item?.serviceName).toBe('Odontología general');
@@ -139,8 +139,8 @@ describe('copiloto interno — operaciones de mostrador', () => {
     const { db, serviceId } = await seedDemoClinic();
     const slots = await availabilityService.slots(db, {
       serviceId,
-      dateFrom: '2026-10-05',
-      dateTo: '2026-10-11',
+      dateFrom: WEEK.dateFrom,
+      dateTo: WEEK.dateTo,
     });
     const target = slots.find((s) => s.doctorId === slots[0].doctorId && s.startsAt !== slots[0].startsAt);
     expect(target).toBeDefined();
@@ -160,8 +160,8 @@ describe('copiloto interno — operaciones de mostrador', () => {
     const { db, serviceId } = await seedDemoClinic();
     const [slot] = await availabilityService.slots(db, {
       serviceId,
-      dateFrom: '2026-10-05',
-      dateTo: '2026-10-11',
+      dateFrom: WEEK.dateFrom,
+      dateTo: WEEK.dateTo,
     });
     const booking = await bookingService.create(db, {
       serviceId: slot.serviceId,
@@ -174,8 +174,8 @@ describe('copiloto interno — operaciones de mostrador', () => {
     expect(cancelled.status).toBe('cancelled');
 
     const agenda = await bookingService.agenda(db, {
-      dateFrom: '2026-10-05',
-      dateTo: '2026-10-11',
+      dateFrom: WEEK.dateFrom,
+      dateTo: WEEK.dateTo,
       status: 'cancelled',
     });
     expect(agenda.map((a) => a.id)).toContain(booking.id);

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildPublicTools, createAppointmentInput, getAvailableSlotsInput } from '../src/ai/tools';
 import { availabilityService, bookingService } from '../src/domain/services';
-import { seedDemoClinic } from './helpers';
+import { seedDemoClinic, WEEK } from './helpers';
 
 describe('secretaría — boundary de tools', () => {
   it('el inputSchema de create_appointment rechaza un clinic_id inyectado', () => {
@@ -19,8 +19,8 @@ describe('secretaría — boundary de tools', () => {
   it('get_available_slots también rechaza un clinic_id en los args', () => {
     const result = getAvailableSlotsInput.safeParse({
       serviceId: 'svc_general',
-      dateFrom: '2026-10-05',
-      dateTo: '2026-10-11',
+      dateFrom: WEEK.dateFrom,
+      dateTo: WEEK.dateTo,
       clinic_id: 'cl_otra',
     });
     expect(result.success).toBe(false);
@@ -44,8 +44,8 @@ describe('secretaría — disponibilidad y reserva', () => {
     const { db, serviceId } = await seedDemoClinic();
     const slots = await availabilityService.slots(db, {
       serviceId,
-      dateFrom: '2026-10-05',
-      dateTo: '2026-10-11',
+      dateFrom: WEEK.dateFrom,
+      dateTo: WEEK.dateTo,
     });
     expect(slots.length).toBeGreaterThan(0);
     expect(slots[0]).toHaveProperty('startsAt');
@@ -56,8 +56,8 @@ describe('secretaría — disponibilidad y reserva', () => {
     const { db, serviceId } = await seedDemoClinic();
     const [slot] = await availabilityService.slots(db, {
       serviceId,
-      dateFrom: '2026-10-05',
-      dateTo: '2026-10-11',
+      dateFrom: WEEK.dateFrom,
+      dateTo: WEEK.dateTo,
     });
 
     const booking = await bookingService.create(db, {
@@ -76,8 +76,8 @@ describe('secretaría — disponibilidad y reserva', () => {
     const { db, serviceId } = await seedDemoClinic();
     const [slot] = await availabilityService.slots(db, {
       serviceId,
-      dateFrom: '2026-10-05',
-      dateTo: '2026-10-11',
+      dateFrom: WEEK.dateFrom,
+      dateTo: WEEK.dateTo,
     });
     const input = {
       serviceId: slot.serviceId,

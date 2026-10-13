@@ -67,3 +67,18 @@ export async function seedDemoClinic() {
 
   return { clinicId, slug, db, ctx, serviceId: service.id, doctorId: doctor.id };
 }
+
+/**
+ * Semana (lunes a domingo) que arranca el próximo lunes, siempre en el futuro.
+ * Los tests de agenda no pueden usar fechas fijas: el sistema no ofrece turnos
+ * pasados y una fecha escrita a mano se vence sola.
+ */
+function nextWeek(now = new Date()) {
+  const day = (d: Date) => d.toISOString().slice(0, 10);
+  const daysToMonday = ((8 - now.getUTCDay()) % 7) || 7;
+  const monday = new Date(now.getTime() + daysToMonday * 86_400_000);
+  const sunday = new Date(monday.getTime() + 6 * 86_400_000);
+  return { dateFrom: day(monday), dateTo: day(sunday) };
+}
+
+export const WEEK = nextWeek();
